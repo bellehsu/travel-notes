@@ -530,14 +530,16 @@ async function loadJsonFile(file){
 document.getElementById('fileInput').addEventListener('change', (e) => loadJsonFile(e.target.files[0]));
 async function loadDefaultJson(){
   try{
-    const res = await fetch('./trip.json', { cache: 'no-store' });
-    if(!res.ok) throw new Error('Failed to load trip.json');
+    const defaultJsonUrl = new URL('trip.json', document.baseURI).href;
+    const res = await fetch(defaultJsonUrl, { cache: 'no-store' });
+    if(!res.ok) throw new Error('Failed to load trip.json: ' + res.status);
     const parsed = await res.json();
     render(parsed);
     setStatus('目前使用預設 trip.json');
   }catch(err){
     console.error(err);
-    setStatus('預設 trip.json 載入失敗');
+    const isFileProtocol = window.location.protocol === 'file:';
+    setStatus(isFileProtocol ? '請用 GitHub Pages 或本機 HTTP server 開啟，file:// 無法讀取預設 trip.json' : '預設 trip.json 載入失敗');
   }
 }
 const dropzone = document.getElementById('dropzone');
