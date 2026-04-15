@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>東港＋小琉球 深度之旅</title>
+<title>旅遊計畫</title>
 <style>
 :root{--bg:#f6f8fc;--card:#ffffff;--text:#18212f;--muted:#667085;--line:#e5eaf2;--chip:#eef2ff;--primary:#111827;--primary-soft:#eff6ff;--accent:#2563eb}
 *{box-sizing:border-box}
@@ -91,12 +91,12 @@ iframe{width:100%;height:420px;border:0;border-radius:18px;background:#f3f4f6}
     <div class="ingest">
       <label class="dropzone" id="dropzone" for="fileInput">
         <div class="drop-main">
-          <div class="drop-title">拖曳 JSON 進頁面就更新</div>
-          <div class="drop-sub">也可點一下選檔。整頁資料、地圖索引、可點卡片會一起重刷。</div>
+          <div class="drop-title">拖曳或選擇 JSON 以更新資料</div>
+          <div class="drop-sub">預設會先讀取 trip.json，之後仍可手動更換其他 JSON。</div>
         </div>
         <span class="btn secondary">選擇 JSON</span>
       </label>
-      <div class="status" id="loadStatus">目前使用內建資料</div>
+      <div class="status" id="loadStatus">載入中</div>
       <input id="fileInput" class="hidden-input" type="file" accept=".json,application/json" />
     </div>
   </div>
@@ -127,8 +127,6 @@ iframe{width:100%;height:420px;border:0;border-radius:18px;background:#f3f4f6}
           <div id="dayContent"></div>
         </div>
       </div>
-
-      
 
     </div>
 
@@ -530,6 +528,18 @@ async function loadJsonFile(file){
 }
 
 document.getElementById('fileInput').addEventListener('change', (e) => loadJsonFile(e.target.files[0]));
+async function loadDefaultJson(){
+  try{
+    const res = await fetch('./trip.json', { cache: 'no-store' });
+    if(!res.ok) throw new Error('Failed to load trip.json');
+    const parsed = await res.json();
+    render(parsed);
+    setStatus('目前使用預設 trip.json');
+  }catch(err){
+    console.error(err);
+    setStatus('預設 trip.json 載入失敗');
+  }
+}
 const dropzone = document.getElementById('dropzone');
 ['dragenter','dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
 ['dragleave','drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
@@ -537,6 +547,7 @@ dropzone.addEventListener('drop', e => {
   const file = [...(e.dataTransfer?.files || [])].find(f => /\.json$/i.test(f.name) || (f.type && f.type.includes('json')));
   loadJsonFile(file);
 });
+loadDefaultJson();
 </script>
 </body>
 </html>
