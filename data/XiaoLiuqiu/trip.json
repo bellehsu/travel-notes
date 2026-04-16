@@ -1,12 +1,17 @@
 {
   "title": "東港＋小琉球 深度之旅",
   "subtitle": "3 天 2 夜｜黑鮪魚季 × 海龜浮潛 × 海島行程",
+  "defaults": {
+    "currency": "TWD",
+    "locale": "zh-TW",
+    "price_unit": "per_person"
+  },
   "dates": "5–6 月｜週五至週日",
   "travelers": 4,
   "budget_per_person": 14000,
   "nights": "小琉球 2 晚",
   "stay_tabs_name": "住宿",
-  "shop_tabs_name": "資訊分類",
+  "shop_tabs_name": "相關資訊",
   "budget_tabs_name": "預算",
   "day_tabs_name": "每日行程",
   "budget_items": [
@@ -162,12 +167,22 @@
       "items": [
         {
           "name": "Klook｜3天2夜套裝",
-          "price": "NT$4000-5900 / 人",
+          "price": {
+            "kind": "range",
+            "min": 4000,
+            "max": 5900,
+            "unit": "per_person"
+          },
           "note": "方便但偏貴（含船票＋機車＋住宿＋浮潛/潛水）"
         },
         {
-          "name": "3天2夜（浮潛版/潛水)",
-          "price": "NT$4000-6000 / 人",
+          "name": "3天2夜（浮潛版/潛水）",
+          "price": {
+            "kind": "range",
+            "min": 4000,
+            "max": 6000,
+            "unit": "per_person"
+          },
           "note": "方便（含船票＋機車＋住宿＋浮潛/潛水＋保險）",
           "link": "https://www.kkday.com/zh-tw/product/150624"
         }
@@ -180,54 +195,52 @@
         {
           "name": "啾開心浮潛",
           "tag": "最適合這團",
-          "price": "專屬浮潛 NT$600 / 人；長距離浮潛 NT$1,000 / 人",
+          "price_options": [
+            {
+              "label": "專屬浮潛",
+              "amount": 600,
+              "unit": "per_person"
+            },
+            {
+              "label": "長距離浮潛",
+              "amount": 1000,
+              "unit": "per_person"
+            }
+          ],
           "note": "小團、新手友善、拍照表現好，適合 4 人同行。"
         },
         {
           "name": "熊潛水 Bear Diving",
           "tag": "老字號",
-          "price": "NT$365 / 人",
+          "price": {
+            "kind": "fixed",
+            "amount": 365,
+            "unit": "per_person"
+          },
           "note": "老字號，教練制度穩，安全感高。行程約1.5-2小時",
           "link": "https://www.klook.com/zh-TW/activity/19952-snorkeling-experience-xiaoliuqiu-kenting/?dd_referrer="
         },
         {
-          "name": "Klook｜雙人獨木舟",
-          "price": "NT$590 / 人",
+          "name": "雙人獨木舟",
+          "tag": "Klook",
+          "price": {
+            "kind": "fixed",
+            "amount": 590,
+            "unit": "per_person"
+          },
           "note": "約90分鐘、教練、攝影",
           "link": "https://www.klook.com/zh-TW/activity/111454-snorkeling-canoeing-sup-and-discover-scuba-diving-in-xiaoliuqiu/?spm=SearchResult.SearchResult_LIST&clickId=79b95527ec"
         },
         {
-          "name": "KKday｜SUP（二人一板＋空拍）",
-          "price": "NT$720 / 人",
-          "note": "約1.5–2小時＋空拍， 4人以上送星空導覽",
+          "name": "SUP",
+          "tag": "Klook",
+          "price": {
+            "kind": "fixed",
+            "amount": 720,
+            "unit": "per_person"
+          },
+          "note": "約1.5–2小時，二人一板＋空拍， 4人以上送星空導覽",
           "link": "https://www.kkday.com/zh-tw/product/122688-xiaoliuqiu-sup-sunrise-sunset-starry-sky-guide-or-2-in-1-sup-snorkeling-free-aerial-shot-taiwan"
-        }
-      ]
-    },
-    {
-      "key": "transport",
-      "label": "交通",
-      "items": [
-        {
-          "name": "台灣好行",
-          "tag": "交通",
-          "price": "NT$122 / 人",
-          "note": "左營高鐵站 2 號出口購票",
-          "link": "https://www.ptbus.com.tw/product_info/16/1/9127D?num=9127D"
-        },
-        {
-          "name": "泰富航運",
-          "tag": "交通船",
-          "price": "NT$360 / 人",
-          "note": "東港↔小琉球來回船票",
-          "link": "https://www.kkday.com/zh-tw/product/100243-pingtung-donggang-xiaoliuqiu-ferry-ticket-taifu"
-        },
-        {
-          "name": "泰富航運",
-          "tag": "交通船+機車48H",
-          "price": "NT$683.5 / 人",
-          "note": "東港↔小琉球來回船票+機車48H",
-          "link": "https://www.kkday.com/zh-tw/product/100243-pingtung-donggang-xiaoliuqiu-ferry-ticket-taifu"
         }
       ]
     },
@@ -238,22 +251,76 @@
         {
           "name": "王匠黑鮪魚生魚片&日本料理《華僑市228攤》",
           "tag": "海鮮",
-          "price": "NT$500–1,200 / 人",
+          "price": {
+            "kind": "range",
+            "min": 500,
+            "max": 1200,
+            "unit": "per_person"
+          },
           "note": "黑鮪魚季主場",
           "map": "https://maps.google.com/?q=22.468501839015595,120.4433713416335"
         },
         {
           "name": "東港生魚片 曾鮮黑鮪魚專賣店",
           "tag": "海鮮",
-          "price": "NT$500–1,200 / 人",
+          "price": {
+            "kind": "range",
+            "min": 500,
+            "max": 1200,
+            "unit": "per_person"
+          },
           "note": "黑鮪魚季主場",
           "map": "https://maps.google.com/?q=22.468356487548146,120.4436261545681"
         },
         {
           "name": "東港夜市",
           "tag": "美食",
-          "price": "NT$200–1,000 / 人",
+          "price": {
+            "kind": "range",
+            "min": 200,
+            "max": 1000,
+            "unit": "per_person"
+          },
           "note": "週三、週六營業"
+        }
+      ]
+    },
+    {
+      "key": "transport",
+      "label": "交通",
+      "items": [
+        {
+          "name": "台灣好行",
+          "tag": "交通",
+          "price": {
+            "kind": "fixed",
+            "amount": 122,
+            "unit": "per_person"
+          },
+          "note": "左營高鐵站 2 號出口購票",
+          "link": "https://www.ptbus.com.tw/product_info/16/1/9127D?num=9127D"
+        },
+        {
+          "name": "泰富航運",
+          "tag": "交通船",
+          "price": {
+            "kind": "fixed",
+            "amount": 360,
+            "unit": "per_person"
+          },
+          "note": "東港↔小琉球來回船票",
+          "link": "https://www.kkday.com/zh-tw/product/100243-pingtung-donggang-xiaoliuqiu-ferry-ticket-taifu"
+        },
+        {
+          "name": "泰富航運",
+          "tag": "交通船+機車48H",
+          "price": {
+            "kind": "fixed",
+            "amount": 683.5,
+            "unit": "per_person"
+          },
+          "note": "東港↔小琉球來回船票+機車48H",
+          "link": "https://www.kkday.com/zh-tw/product/100243-pingtung-donggang-xiaoliuqiu-ferry-ticket-taifu"
         }
       ]
     }
@@ -267,60 +334,73 @@
       "hero": "華僑市場黑鮪魚",
       "stops": [
         {
-          "time": "08:31–10:10",
+          "id": "taipei-hsr",
+          "start_time": "08:31",
+          "end_time": "10:10",
+          "duration_min": 99,
+          "transit_to_next_min": 10,
           "name": "高鐵台北站",
           "maps_label": "高鐵台北站",
           "short_address": "台北車站",
           "type": "交通",
-          "stay": "30 分",
-          "cost": "NT$1,490 / 人",
+          "price": {
+            "kind": "fixed",
+            "amount": 1490,
+            "unit": "per_person"
+          },
           "address": "台北市中正區北平西路 3 號",
           "note": "集合搭高鐵南下",
-          "next": "高鐵左營站",
+          "next_stop_id": "zuoying-hsr",
+          "next_label": "高鐵左營站",
           "map": "https://maps.google.com/?q=25.0477,121.5170",
-          "highlight": false
+          "highlight": false,
+          "photos": []
         },
         {
-          "time": "10:20–10:50",
+          "id": "zuoying-hsr",
+          "start_time": "10:20",
+          "end_time": "10:50",
+          "duration_min": 30,
+          "transit_to_next_min": 100,
           "name": "高鐵左營站",
           "maps_label": "高鐵左營站",
           "short_address": "左營站",
           "type": "交通",
-          "stay": "30 分",
-          "cost": "NT$122 / 人",
+          "price": {
+            "kind": "fixed",
+            "amount": 122,
+            "unit": "per_person"
+          },
           "address": "高雄市左營區高鐵路 105 號",
           "note": "左營高鐵站2號出口墾丁快線,轉乘台灣好行",
-          "next": "東港",
+          "next_label": "東港",
           "map": "https://maps.google.com/?q=22.6870,120.3095",
-          "highlight": false
+          "highlight": false,
+          "photos": []
         },
         {
-          "time": "12:30–14:30",
+          "id": "huaqiao-market",
+          "start_time": "12:30",
+          "end_time": "14:30",
+          "duration_min": 120,
+          "transit_to_next_min": 60,
           "name": "華僑市場",
           "maps_label": "黑鮪魚市場",
           "short_address": "東港",
           "type": "美食 / 市場",
-          "stay": "120 分",
-          "cost": "NT$500–1,200 / 人",
+          "price": {
+            "kind": "range",
+            "min": 500,
+            "max": 1200,
+            "unit": "per_person"
+          },
           "address": "屏東縣東港鎮朝隆路 39 號",
           "note": "黑鮪魚季主場，主攻大腹、中腹與現流海鮮。",
-          "next": "泰富航運",
+          "next_label": "泰富航運",
           "map": "https://maps.google.com/?q=22.468142739778454,120.44329295800473",
-          "highlight": true
-        },
-        {
-          "time": "15:30–16:00",
-          "name": "東琉之翼 泰富航運",
-          "maps_label": "泰富航運",
-          "short_address": "東港碼頭",
-          "type": "交通",
-          "stay": "60 分",
-          "cost": "NT$360 / 人",
-          "address": "屏東縣東港鎮朝隆路 43 號",
-          "note": "搭船前往小琉球",
-          "next": "小琉球",
-          "map": "https://maps.google.com/?q=22.468483946014423,120.44453554232895",
-          "highlight": false
+          "highlight": true,
+          "photos": [
+          ]
         }
       ]
     },
@@ -356,7 +436,7 @@
           "address": "小琉球西側海岸",
           "note": "Day 2 視覺高潮，傍晚夕陽收尾。",
           "next": "晚餐",
-          "map": "https://maps.google.com/?q=%E8%90%BD%E6%97%A5%E4%BA%AD+%E5%B0%8F%E7%90%89%E7%90%83",
+          "map": "https://maps.google.com/?q=22.325264520211345,120.35345405349004",
           "highlight": true
         }
       ]
