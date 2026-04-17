@@ -1,20 +1,22 @@
-[
-  {
-    "key": "Taiwan",
-    "label": "台灣",
-    "description": "離島、環島、城市小旅行",
-    "cover": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c"
-  },
-  {
-    "key": "Japan",
-    "label": "日本",
-    "description": "城市、溫泉、美食、購物",
-    "cover": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf"
-  },
-  {
-    "key": "Korea",
-    "label": "韓國",
-    "description": "城市、美食、購物",
-    "cover": "https://images.unsplash.com/photo-1538485399081-7c897ef49e45"
-  }
-]
+{
+  "trips": [
+    {
+      "slug": "busan-5d4n-202604",
+      "title": "釜山 5天4夜",
+      "summary": "春季釜山美食＋景點行程",
+      "coverImage": "",
+      "days": 5,
+      "nights": 4,
+      "tags": ["韓國", "釜山", "美食", "春季"]
+    },
+    {
+      "slug": "xiaoliuqiu-3d2n-202605",
+      "title": "小琉球 3天2夜",
+      "summary": "浮潛 × 海龜 × 慢活島嶼",
+      "coverImage": "",
+      "days": 3,
+      "nights": 2,
+      "tags": ["台灣", "小琉球", "海島"]
+    }
+  ]
+}

@@ -1,85 +1,24 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TravelHub</title>
-
-<link rel="stylesheet" href="./assets/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Travel Directory</title>
+  <meta name="description" content="Travel trips directory" />
+  <link rel="canonical" href="https://travel.omnixaas.com/" />
+  <link rel="stylesheet" href="/assets/styles.css" />
 </head>
-
 <body>
-<div class="wrap">
-  <div class="hero">
-    <h1 id="title">讀取中…</h1>
-    <p id="subtitle"></p>
-
-    <div class="meta">
-      <div class="box"><div class="small">日期</div><div id="dates"></div></div>
-      <div class="box"><div class="small">同行人數</div><div id="travelers"></div></div>
-      <div class="box"><div class="small">預算上限</div><div id="budgetPerPerson"></div></div>
-      <div class="box"><div class="small">住宿安排</div><div id="nights"></div></div>
-    </div>
-
-  </div>
-
-  <div class="card" style="margin-top:24px">
-    <div class="section-head"><h2>地圖資訊</h2></div>
-    <div class="section-body">
-      <div class="map-shell">
-        <div class="map-frame-wrap">
-          <iframe id="mapFrame"></iframe>
-          <div class="map-focus" id="mapFocus"></div>
-        </div>
-        <div><div class="map-index" id="locationList"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="layout">
-    <div class="stack">
-      <div class="card">
-        <div class="section-head"><h2 id="dayTabsName">每日行程</h2></div>
-        <div class="section-body">
-          <div class="tabs" id="dayTabs"></div>
-          <div id="dayContent"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stack">
-      <div class="card">
-        <div class="section-head"><h2 id="budgetTabsName">預算</h2></div>
-        <div class="section-body">
-          <div class="tabs" id="budgetTabs"></div>
-          <div id="budgetContent"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-head"><h2 id="stayTabsName">住宿資訊卡</h2></div>
-        <div class="section-body">
-          <div class="tabs" id="stayTabs"></div>
-          <div id="stayContent"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-head"><h2>行前提醒</h2></div>
-        <div class="section-body"><div class="list" id="reminderList"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:24px">
-    <div class="section-head"><h2 id="shopTabsName">店家 / 活動 / 交通資訊卡</h2></div>
-    <div class="section-body">
-      <div class="tabs" id="shopTabs"></div>
-      <div id="shopContent"></div>
-    </div>
-  </div>
-</div>
-
-<script src="./assets/app.js"></script>
+  <div id="app"></div>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect");
+      if (redirect && redirect.startsWith("/")) {
+        window.history.replaceState({}, "", redirect);
+      }
+    })();
+  </script>
+  <script type="module" src="/assets/app.js"></script>
 </body>
 </html>
