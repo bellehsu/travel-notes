@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>旅遊目錄</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <div class="catalog-wrap">
+    <header class="catalog-hero">
+      <p class="catalog-kicker">Travel Catalog</p>
+      <h1>旅遊目錄</h1>
+      <p class="catalog-subtitle">依國家 / 地區瀏覽你的旅遊計畫</p>
+    </header>
+
+    <section class="catalog-section">
+      <div class="catalog-section-head">
+        <h2>分類</h2>
+        <div id="countryTabs" class="catalog-tabs"></div>
+      </div>
+      <div id="countryGrid" class="country-grid"></div>
+    </section>
+
+    <section class="catalog-section">
+      <div class="catalog-section-head">
+        <h2 id="tripSectionTitle">行程列表</h2>
+      </div>
+      <div id="tripGrid" class="trip-grid"></div>
+    </section>
+  </div>
+
+  <script src="./assets/catalog.js"></script>
+</body>
+</html>

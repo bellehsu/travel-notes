@@ -399,8 +399,29 @@
           "next_label": "泰富航運",
           "map": "https://maps.google.com/?q=22.468142739778454,120.44329295800473",
           "highlight": true,
-          "photos": [
-          ]
+          "photos": []
+        },
+        {
+          "id": "泰富航運",
+          "start_time": "15:30",
+          "end_time": "16:00",
+          "duration_min": 30,
+          "transit_to_next_min": 60,
+          "name": "東琉之翼 泰富航運",
+          "maps_label": "泰富航運",
+          "short_address": "東港碼頭",
+          "type": "交通",
+          "price": {
+            "kind": "fixed",
+            "amount": 360,
+            "unit": "per_person"
+          },
+          "address": "屏東縣東港鎮朝隆路 43 號",
+          "note": "搭船前往小琉球",
+          "next_label": "小琉球",
+          "map": "https://maps.google.com/?q=22.468483946014423,120.44453554232895",
+          "highlight": true,
+          "photos": []
         }
       ]
     },
@@ -412,32 +433,45 @@
       "hero": "花瓶岩海龜浮潛",
       "stops": [
         {
-          "time": "10:00–12:00",
+          "id": "snorkeling-huapingyan",
+          "start_time": "10:00",
+          "end_time": "12:00",
+          "duration_min": 90,
           "name": "浮潛體驗（花瓶岩 / 蛤板灣）",
           "maps_label": "浮潛集合點",
           "short_address": "小琉球",
           "type": "水上活動",
-          "stay": "90 分",
-          "cost": "NT$400–600 / 人 + 保險 NT$50",
+          "price": {
+            "kind": "range",
+            "min": 400,
+            "max": 600,
+            "unit": "per_person"
+          },
           "address": "依店家集合點",
-          "note": "本日主場，優先小團、教練帶領、含拍照方案。",
-          "next": "環島",
+          "note": "本日主場，優先小團、教練帶領、含拍照方案。保險另計 NT$50 / 人。",
+          "next_label": "環島",
           "map": "https://maps.google.com/?q=%E8%8A%B1%E7%93%B6%E5%B2%A9+%E5%B0%8F%E7%90%89%E7%90%83",
-          "highlight": true
+          "highlight": true,
+          "photos": []
         },
         {
-          "time": "17:40–18:20",
+          "id": "sunset-pavilion",
+          "start_time": "17:40",
+          "end_time": "18:20",
+          "duration_min": 40,
           "name": "落日亭",
           "maps_label": "落日亭",
           "short_address": "小琉球西側",
           "type": "夕陽",
-          "stay": "40 分",
-          "cost": "免費",
+          "price": {
+            "kind": "free"
+          },
           "address": "小琉球西側海岸",
           "note": "Day 2 視覺高潮，傍晚夕陽收尾。",
-          "next": "晚餐",
+          "next_label": "晚餐",
           "map": "https://maps.google.com/?q=22.325264520211345,120.35345405349004",
-          "highlight": true
+          "highlight": true,
+          "photos": []
         }
       ]
     },
@@ -449,40 +483,61 @@
       "hero": "",
       "stops": [
         {
-          "time": "15:10-15:30",
+          "id": "liuqiu-ferry-return",
+          "start_time": "15:10",
+          "end_time": "15:30",
+          "duration_min": 20,
+          "transit_to_next_min": 30,
           "name": "小琉球交通船",
           "type": "交通",
-          "stay": "20 分",
-          "cost": "NT$0 / 人",
+          "price": {
+            "kind": "free"
+          },
           "address": "",
-          "note": "15:30、16:10",
-          "next": "東港",
+          "note": "15:30、16:10 班次可選。",
+          "next_label": "東港",
           "map": "",
-          "highlight": false
+          "highlight": false,
+          "photos": []
         },
         {
-          "time": "16:00-16:30",
+          "id": "donggang-return",
+          "start_time": "16:00",
+          "end_time": "16:30",
+          "duration_min": 30,
+          "transit_to_next_min": 210,
           "name": "東港",
           "type": "交通",
-          "stay": "30 分",
-          "cost": "NT$122 / 人",
+          "price": {
+            "kind": "fixed",
+            "amount": 122,
+            "unit": "per_person"
+          },
           "address": "",
           "note": "",
-          "next": "高鐵左營站",
+          "next_label": "高鐵左營站",
           "map": "",
-          "highlight": false
+          "highlight": false,
+          "photos": []
         },
         {
-          "time": "20:00-20:30",
+          "id": "zuoying-hsr-return",
+          "start_time": "20:00",
+          "end_time": "20:30",
+          "duration_min": 30,
           "name": "高鐵左營站",
           "type": "交通",
-          "stay": "30 分",
-          "cost": "NT$1,490 / 人",
+          "price": {
+            "kind": "fixed",
+            "amount": 1490,
+            "unit": "per_person"
+          },
           "address": "高雄市左營區高鐵路 105 號",
-          "note": "20:31班次，95分鐘",
-          "next": "高鐵台北站",
+          "note": "20:31 班次，95 分鐘。",
+          "next_label": "高鐵台北站",
           "map": "https://maps.google.com/?q=25.0477,121.5170",
-          "highlight": false
+          "highlight": false,
+          "photos": []
         }
       ]
     }

@@ -1,28 +1,61 @@
 let currentMapId = "";
 let currentLocations = [];
 
+// =========================
+// QUERY / PATH
+// =========================
+function getParams() {
+  const p = new URLSearchParams(window.location.search);
+  return {
+    country: p.get("country")?.trim() || "",
+    trip: p.get("trip")?.trim() || "",
+  };
+}
+
+function getCountry() {
+  return getParams().country;
+}
+
 function getTrip() {
-  const params = new URLSearchParams(window.location.search);
-  const trip = params.get("trip");
-  return trip ? trip.trim() : "";
+  return getParams().trip;
 }
 
 function resolveJsonPath() {
-  const trip = getTrip();
-  return trip ? `./data/${encodeURIComponent(trip)}/trip.json` : "./trip.json";
+  const { country, trip } = getParams();
+
+  if (country && trip) {
+    return `./data/${encodeURIComponent(country)}/${encodeURIComponent(trip)}/trip.json`;
+  }
+
+  if (trip) {
+    return `./data/${encodeURIComponent(trip)}/trip.json`;
+  }
+
+  return "./trip.json";
 }
 
-function buildTripUrl(tripKey) {
-  const url = new URL(window.location.href);
-  url.searchParams.set("trip", tripKey);
+function buildTripUrl(country, trip) {
+  const url = new URL("./index.html", window.location.href);
+  if (country) url.searchParams.set("country", country);
+  if (trip) url.searchParams.set("trip", trip);
   return url.pathname + url.search;
 }
 
+async function fetchJson(path) {
+  const res = await fetch(path, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${path}`);
+  return res.json();
+}
+
+// =========================
+// MENU
+// =========================
 async function loadTripIndex() {
+  const country = getCountry();
+  if (!country) return [];
+
   try {
-    const res = await fetch("./data/index.json", { cache: "no-store" });
-    if (!res.ok) throw new Error(`Failed to load data/index.json: ${res.status}`);
-    const trips = await res.json();
+    const trips = await fetchJson(`./data/${encodeURIComponent(country)}/index.json`);
     return Array.isArray(trips) ? trips : [];
   } catch (err) {
     console.error(err);
@@ -34,23 +67,24 @@ function renderTripMenu(trips) {
   const box = document.getElementById("tripMenu");
   if (!box) return;
 
+  const currentCountry = getCountry();
   const currentTrip = getTrip();
   box.innerHTML = "";
 
-  if (!Array.isArray(trips) || !trips.length) {
-    box.innerHTML = '<span class="muted">目前沒有可用行程清單</span>';
-    return;
-  }
+  if (!Array.isArray(trips) || !trips.length) return;
 
   trips.forEach((trip) => {
     const a = document.createElement("a");
     a.className = "trip-link" + (trip.key === currentTrip ? " active" : "");
-    a.href = buildTripUrl(trip.key);
+    a.href = buildTripUrl(currentCountry, trip.key);
     a.textContent = trip.label || trip.key;
     box.appendChild(a);
   });
 }
 
+// =========================
+// BASIC UTILS
+// =========================
 function nonEmpty(v) {
   return v !== undefined && v !== null && String(v).trim() !== "";
 }
@@ -91,6 +125,9 @@ function setStatus(text) {
   if (el) el.textContent = text;
 }
 
+// =========================
+// FORMATTERS
+// =========================
 function formatMoney(amount, currency = "TWD", locale = "zh-TW") {
   return new Intl.NumberFormat(locale, {
     style: "currency",
@@ -100,13 +137,12 @@ function formatMoney(amount, currency = "TWD", locale = "zh-TW") {
 }
 
 function formatUnit(unit) {
-  const map = {
+  return {
     per_person: "/ 人",
     per_group: "/ 組",
     per_night: "/ 晚",
     none: "",
-  };
-  return map[unit] || "";
+  }[unit] || "";
 }
 
 function getDefaults(data) {
@@ -160,6 +196,30 @@ function formatTimeRange(start, end) {
   return start || end || "";
 }
 
+function resolveStopTimeText(stop) {
+  return formatTimeRange(stop.start_time, stop.end_time) || stop.time || "";
+}
+
+function resolveStopDurationText(stop) {
+  return formatDuration(stop.duration_min) || stop.stay || "";
+}
+
+function resolveStopTransitText(stop) {
+  return formatDuration(stop.transit_to_next_min);
+}
+
+function resolveStopPriceText(stop, defaults) {
+  return formatPrice(stop.price, defaults) || stop.cost || "";
+}
+
+function resolveShopPriceText(item, defaults) {
+  return formatPrice(item.price, defaults) || "";
+}
+
+function resolveShopPriceOptionsText(item, defaults) {
+  return formatPriceOptions(item.price_options, defaults) || "";
+}
+
 function resolvePhotoSrc(photo) {
   return photo?.src || "";
 }
@@ -182,8 +242,12 @@ function renderPhotos(photos) {
     </div>`;
 }
 
+// =========================
+// NORMALIZE
+// =========================
 function normalizeStayGroups(data) {
   if (Array.isArray(data.stay_groups) && data.stay_groups.length) return data.stay_groups;
+
   const grouped = {};
   (data.stays || []).forEach((item) => {
     const key = item.area || "other";
@@ -195,6 +259,7 @@ function normalizeStayGroups(data) {
 
 function normalizeShopGroups(data) {
   if (Array.isArray(data.shop_groups) && data.shop_groups.length) return data.shop_groups;
+
   const grouped = {};
   (data.shops || []).forEach((item) => {
     const key = item.tag || "other";
@@ -204,6 +269,9 @@ function normalizeShopGroups(data) {
   return Object.values(grouped);
 }
 
+// =========================
+// MAP
+// =========================
 function makeMapTarget(item) {
   if (nonEmpty(item?.map)) return item.map;
   if (nonEmpty(item?.address)) return `https://www.google.com/maps?q=${encodeURIComponent(item.address)}`;
@@ -225,7 +293,8 @@ function renderExtraRows(entries) {
     <div class="extras">
       ${entries
         .map(
-          ([k, v]) => `<div class="extra-row"><strong>${escapeHtml(k)}：</strong>${escapeHtml(Array.isArray(v) ? v.join("、") : v)}</div>`
+          ([k, v]) =>
+            `<div class="extra-row"><strong>${escapeHtml(k)}：</strong>${escapeHtml(Array.isArray(v) ? v.join("、") : v)}</div>`
         )
         .join("")}
     </div>`;
@@ -241,6 +310,7 @@ function updateActiveStates() {
     if (el.classList.contains("map-switch-btn")) return;
     el.classList.toggle("active-map", el.dataset.mapid === currentMapId);
   });
+
   document.querySelectorAll(".location").forEach((el) => {
     el.classList.toggle("active", el.dataset.mapid === currentMapId);
   });
@@ -297,8 +367,10 @@ function collectLocations(data, stayGroups, shopGroups, defaults) {
     (day.stops || []).forEach((stop, stopIndex) => {
       const map = makeMapTarget(stop);
       if (!map) return;
-      const timeText = formatTimeRange(stop.start_time, stop.end_time) || stop.time || "";
-      const priceText = formatPrice(stop.price, defaults) || stop.cost || "";
+
+      const timeText = resolveStopTimeText(stop);
+      const priceText = resolveStopPriceText(stop, defaults);
+
       locations.push({
         id: `day-${day.key || dayIndex}-${stopIndex}`,
         map,
@@ -315,6 +387,7 @@ function collectLocations(data, stayGroups, shopGroups, defaults) {
     (group.items || []).forEach((item, itemIndex) => {
       const map = makeMapTarget(item);
       if (!map) return;
+
       locations.push({
         id: `stay-${group.key || groupIndex}-${itemIndex}`,
         map,
@@ -331,7 +404,10 @@ function collectLocations(data, stayGroups, shopGroups, defaults) {
     (group.items || []).forEach((item, itemIndex) => {
       const map = makeMapTarget(item);
       if (!map) return;
-      const itemPrice = formatPrice(item.price, defaults) || formatPriceOptions(item.price_options, defaults);
+
+      const itemPrice =
+        resolveShopPriceText(item, defaults) || resolveShopPriceOptionsText(item, defaults);
+
       locations.push({
         id: `shop-${group.key || groupIndex}-${itemIndex}`,
         map,
@@ -352,12 +428,14 @@ function attachMapInteractions() {
     card.addEventListener("click", (event) => {
       const isAnchor = event.target.closest("a");
       if (isAnchor) return;
+
       const btn = event.target.closest(".map-switch-btn");
       if (btn) {
         focusMapById(btn.dataset.mapid);
         event.stopPropagation();
         return;
       }
+
       const id = card.dataset.mapid;
       if (id) focusMapById(id);
     });
@@ -371,6 +449,9 @@ function attachMapInteractions() {
   });
 }
 
+// =========================
+// VALIDATION
+// =========================
 function validatePrice(price, path, errors) {
   if (!isObject(price)) {
     errors.push(`${path} 必須是 object`);
@@ -480,24 +561,31 @@ function validateTripData(data) {
             errors.push(`${path} 必須是 object`);
             return;
           }
+
           if (!isNonEmptyString(stop.name)) {
             errors.push(`${path}.name 必填`);
           }
+
           if (stop.start_time !== undefined && !isValidTimeHHmm(stop.start_time)) {
             errors.push(`${path}.start_time 必須是 HH:mm`);
           }
+
           if (stop.end_time !== undefined && !isValidTimeHHmm(stop.end_time)) {
             errors.push(`${path}.end_time 必須是 HH:mm`);
           }
+
           if (stop.duration_min !== undefined && typeof stop.duration_min !== "number") {
             errors.push(`${path}.duration_min 必須是數字`);
           }
+
           if (stop.transit_to_next_min !== undefined && typeof stop.transit_to_next_min !== "number") {
             errors.push(`${path}.transit_to_next_min 必須是數字`);
           }
+
           if (stop.price !== undefined) {
             validatePrice(stop.price, `${path}.price`, errors);
           }
+
           if (stop.photos !== undefined) {
             validatePhotos(stop.photos, `${path}.photos`, errors);
           }
@@ -516,22 +604,27 @@ function validateTripData(data) {
         errors.push(`shop_groups[${groupIndex}] 必須是 object`);
         return;
       }
+
       if (!Array.isArray(group.items)) {
         errors.push(`shop_groups[${groupIndex}].items 必須是陣列`);
         return;
       }
+
       group.items.forEach((item, itemIndex) => {
         const path = `shop_groups[${groupIndex}].items[${itemIndex}]`;
         if (!isObject(item)) {
           errors.push(`${path} 必須是 object`);
           return;
         }
+
         if (!isNonEmptyString(item.name)) {
           errors.push(`${path}.name 必填`);
         }
+
         if (item.price !== undefined) {
           validatePrice(item.price, `${path}.price`, errors);
         }
+
         if (item.price_options !== undefined) {
           if (!Array.isArray(item.price_options)) {
             errors.push(`${path}.price_options 必須是陣列`);
@@ -551,6 +644,7 @@ function validateTripData(data) {
             });
           }
         }
+
         if (item.photos !== undefined) {
           validatePhotos(item.photos, `${path}.photos`, errors);
         }
@@ -587,6 +681,9 @@ function renderValidationError(errors) {
   if (mapFrame) mapFrame.src = "";
 }
 
+// =========================
+// RENDER
+// =========================
 function render(data) {
   currentMapId = "";
   const defaults = getDefaults(data);
@@ -600,7 +697,7 @@ function render(data) {
   document.getElementById("dayTabsName").textContent = data.day_tabs_name || "每日行程";
   document.getElementById("stayTabsName").textContent = data.stay_tabs_name || "住宿資訊";
   document.getElementById("shopTabsName").textContent = data.shop_tabs_name || "店家 / 活動 / 交通資訊";
-  document.getElementById("budgetTabsName").textContent = data.budget_tabs_name || "預算表";
+  document.getElementById("budgetTabsName").textContent = data.budget_tabs_name || "預算";
 
   const reminderList = document.getElementById("reminderList");
   reminderList.innerHTML = "";
@@ -614,6 +711,7 @@ function render(data) {
   const stayGroups = normalizeStayGroups(data);
   const shopGroups = normalizeShopGroups(data);
 
+  // ===== DAYS =====
   const dayTabs = document.getElementById("dayTabs");
   const dayContent = document.getElementById("dayContent");
   dayTabs.innerHTML = "";
@@ -630,11 +728,13 @@ function render(data) {
       .map((stop, idx) => {
         const mapId = `day-${day.key || "day"}-${idx}`;
         const mapTarget = makeMapTarget(stop);
-        const timeText = formatTimeRange(stop.start_time, stop.end_time) || stop.time || "";
-        const durationText = formatDuration(stop.duration_min) || stop.stay || "";
-        const transitText = formatDuration(stop.transit_to_next_min);
-        const priceText = formatPrice(stop.price, defaults) || stop.cost || "";
+
+        const timeText = resolveStopTimeText(stop);
+        const durationText = resolveStopDurationText(stop);
+        const transitText = resolveStopTransitText(stop);
+        const priceText = resolveStopPriceText(stop, defaults);
         const photosHtml = renderPhotos(stop.photos);
+
         const extras = renderExtraRows(
           extraFields(stop, [
             "id",
@@ -728,6 +828,7 @@ function render(data) {
   });
   renderDay(activeDay);
 
+  // ===== STAY =====
   const stayTabs = document.getElementById("stayTabs");
   const stayContent = document.getElementById("stayContent");
   stayTabs.innerHTML = "";
@@ -791,6 +892,7 @@ function render(data) {
   });
   renderStayGroup(activeStay);
 
+  // ===== SHOP =====
   const shopTabs = document.getElementById("shopTabs");
   const shopContent = document.getElementById("shopContent");
   shopTabs.innerHTML = "";
@@ -809,8 +911,8 @@ function render(data) {
         .map((s, idx) => {
           const mapTarget = makeMapTarget(s);
           const mapId = `shop-${group.key || "shop"}-${idx}`;
-          const itemPrice = formatPrice(s.price, defaults);
-          const itemPriceOptions = formatPriceOptions(s.price_options, defaults);
+          const itemPrice = resolveShopPriceText(s, defaults);
+          const itemPriceOptions = resolveShopPriceOptionsText(s, defaults);
           const extras = renderExtraRows(
             extraFields(s, ["name", "tag", "price", "price_options", "note", "link", "map", "address", "photos"])
           );
@@ -858,6 +960,7 @@ function render(data) {
   });
   renderShopGroup(activeShop);
 
+  // ===== BUDGET =====
   const budgetTabs = document.getElementById("budgetTabs");
   const budgetContent = document.getElementById("budgetContent");
   budgetTabs.innerHTML = "";
@@ -875,7 +978,8 @@ function render(data) {
           <div class="details-wrap">
             ${(data.budget_items || [])
               .map(
-                (item) => `<div class="details-row"><div><strong>${escapeHtml(item.label || "")}</strong></div><div>${formatMoney(item.value || 0, defaults.currency, defaults.locale)}</div></div>`
+                (item) =>
+                  `<div class="details-row"><div><strong>${escapeHtml(item.label || "")}</strong></div><div>${formatMoney(item.value || 0, defaults.currency, defaults.locale)}</div></div>`
               )
               .join("")}
           </div>
@@ -887,6 +991,7 @@ function render(data) {
     } else {
       const item = (data.budget_items || []).find((b) => b.label === label) || (data.budget_items || [])[0];
       if (!item) return;
+
       const details = Array.isArray(item.details) ? item.details : [];
       const detailsSum = details.reduce((a, b) => a + Number(b.amount || 0), 0);
       const pct = grandTotal ? Math.round((Number(item.value || 0) / grandTotal) * 100) : 0;
@@ -904,7 +1009,8 @@ function render(data) {
               ? `<div class="details-wrap">
                   ${details
                     .map(
-                      (d) => `<div class="details-row"><div><strong>${escapeHtml(d.name || "項目")}</strong>${nonEmpty(d.note) ? `<div class="small muted detail-note">${escapeHtml(d.note)}</div>` : ""}</div><div>${formatMoney(d.amount || 0, defaults.currency, defaults.locale)}</div></div>`
+                      (d) =>
+                        `<div class="details-row"><div><strong>${escapeHtml(d.name || "項目")}</strong>${nonEmpty(d.note) ? `<div class="small muted detail-note">${escapeHtml(d.note)}</div>` : ""}</div><div>${formatMoney(d.amount || 0, defaults.currency, defaults.locale)}</div></div>`
                     )
                     .join("")}
                 </div>
@@ -945,12 +1051,16 @@ function render(data) {
   });
   renderBudget(activeBudget);
 
+  // ===== MAP =====
   const locations = collectLocations(data, stayGroups, shopGroups, defaults);
   rebuildLocationList(locations);
   attachMapInteractions();
   updateActiveStates();
 }
 
+// =========================
+// LOAD
+// =========================
 async function loadDefaultJson() {
   try {
     const jsonUrl = resolveJsonPath();

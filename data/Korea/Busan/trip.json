@@ -1,0 +1,948 @@
+{
+  "title": "釜山櫻花 × 海景 × 購物 5日行程",
+  "subtitle": "5 天 4 夜｜櫻花 × 海雲臺 × 南浦 × 體驗行程",
+  "defaults": {
+    "currency": "KRW",
+    "locale": "zh-TW",
+    "price_unit": "per_person"
+  },
+  "dates": "春季櫻花期間",
+  "travelers": 2,
+  "budget_per_person": 1000000,
+  "nights": "釜山 4 晚",
+  "day_tabs_name": "每日行程",
+  "budget_items": [
+    {
+      "label": "交通",
+      "value": 10000,
+      "details": [
+        {
+          "name": "機場客運->Bexco",
+          "amount": 9500,
+          "note": "單人單程"
+        },
+        {
+          "name": "Bexco→機場客運",
+          "amount": 9500,
+          "note": "單人單程"
+        },
+        {
+          "name": "計程車",
+          "amount": 20000,
+          "note": "短行程"
+        },
+        {
+          "name": "地鐵",
+          "amount": 20000,
+          "note": "市區移動"
+        }
+      ]
+    },
+    {
+      "label": "住宿",
+      "value": 2000000,
+      "details": [
+        {
+          "name": "海雲臺 / Bexco 住宿",
+          "amount": 2000000,
+          "note": "4 晚"
+        }
+      ]
+    },
+    {
+      "label": "餐飲",
+      "value": 340000,
+      "details": [
+        {
+          "name": "餐飲",
+          "amount": 300000,
+          "note": "5 天"
+        },
+        {
+          "name": "咖啡 / 點心",
+          "amount": 40000,
+          "note": "彈性"
+        }
+      ]
+    },
+    {
+      "label": "活動",
+      "value": 75000,
+      "details": [
+        {
+          "name": "釜山PASS",
+          "amount": 75000,
+          "note": "Big5"
+        }
+      ]
+    },
+    {
+      "label": "其他",
+      "value": 115000,
+      "details": [
+        {
+          "name": "伴手禮",
+          "amount": 45000,
+          "note": "零食"
+        },
+        {
+          "name": "棉被",
+          "amount": 70000,
+          "note": "單人四季被"
+        }
+      ]
+    }
+  ],
+  "stay_groups": [
+    {
+      "key": "Centum City",
+      "label": "海雲臺區",
+      "items": [
+        {
+          "area": "海雲臺",
+          "name": "海雲臺中心飯店",
+          "note": "有浴缸，離SPA Land 可以走路到",
+          "link": "booking.com/hotel/kr/haeundae-centum.zh-tw.html?label=haeundae-centum-7w2C5k4wQHi1ZBmf4fdBjAS393167181770%3Apl%3Ata%3Ap1%3Ap2%3Aac%3Aap%3Aneg%3Afi%3Atikwd-136229671995%3Alp9198261%3Ali%3Adec%3Adm%3Appccp%3DUmFuZG9tSVYkc2RlIyh9Ydj4ck6nIj5Y07FlrAXlavA&sid=b00a572d1a9a75d36d562ac8f82c9a51&gclid=CjwKCAjw7vzOBhBxEiwAc7WNr46XoUWQz8jbajCnr0E8_Rp5_EZW06ZzyvYXr-BlNA0kh-EIAx6jTxoCMKIQAvD_BwE&aid=367380&ucfs=1&arphpl=1&dest_id=-713900&dest_type=city&group_adults=2&req_adults=2&no_rooms=1&group_children=0&req_children=0&hpos=1&hapos=1&sr_order=popularity&srpvid=f9b92cec8a2704e8&srepoch=1776320610&from=searchresults"
+        }
+      ]
+    }
+  ],
+  "shop_groups": [
+    {
+      "key": "moneybox",
+      "label": "換錢所",
+      "items": [
+        {
+          "name": "MONEYBOX HAEUNDAE (Currency Exchange)",
+          "price": {
+            "kind": "range",
+            "min": 0,
+            "max": 100000,
+            "unit": "per_person"
+          },
+          "note": "地點方便但偏貴"
+        }
+      ]
+    },
+    {
+      "key": "activity",
+      "label": "活動",
+      "items": [
+        {
+          "name": "釜山通行證 VISIT BUSAN PASS",
+          "tag": "BIG5",
+          "price": {
+              "kind": "fixed",
+              "amount": 65000,
+              "unit": "per_person"
+          },
+          "note": "省錢方案",
+          "link": "https://www.klook.com/zh-TW/activity/81576-visit-busan-pass/?_currency=TWD&campaignid=23662356155&adgroupid=200039880931&targetid=aud-2285051243511%3Akwd-2435220485461&matchtype=b&device=c&creative=771002596722&extensionid=&keyword=%E9%87%9C%E5%B1%B1%20busan%20pass&loc_interest_ms=&loc_physical_ms=9198261&network=g&utm_content=campaignid_23662356155_adgroupid_200039880931&gad_source=1&gad_campaignid=23662356155&gbraid=0AAAAACa_CWwML56vZzV1a3dXJcHrvRovn&gclid=Cj0KCQjwkYLPBhC3ARIsAIyHi3SHedhHYsRpLakOiHcRwXoka07Dreue3Y46UFaI19OtRRtSY8iYcOAaAtbcEALw_wcB"
+        }
+      ]
+    },
+    {
+      "key": "food",
+      "label": "美食",
+      "items": [
+        {
+          "name": "元祖鮑魚粥",
+          "tag": "海鮮",
+          "price": {
+            "kind": "range",
+            "min": 20000,
+            "max": 40000,
+            "unit": "per_person"
+          },
+          "note": "원조전복죽",
+          "map": "https://maps.google.com/?q=35.16070182566327,129.16582421122823"
+        },
+        {
+          "name": "海底貝殼王國",
+          "tag": "海鮮",
+          "price": {
+            "kind": "range",
+            "min": 30000,
+            "max": 70000,
+            "unit": "per_person"
+          },
+          "note": "바닷속조개왕국",
+          "map": "https://maps.google.com/?q=35.07703382061011,129.02239844006152"
+        },
+        {
+          "name": "釜山宅烤肉",
+          "tag": "美食",
+          "price": {
+            "kind": "range",
+            "min": 20000,
+            "max": 40000,
+            "unit": "per_person"
+          },
+          "note": "부산댁증산점",
+          "map": "https://maps.google.com/?q=35.15859284556345,129.06154732657018"
+          
+        },
+        {
+          "name": "馬鈴薯燉排骨",
+          "tag": "美食",
+          "price": {
+            "kind": "range",
+            "min": 20000,
+            "max": 40000,
+            "unit": "per_person"
+          },
+          "note": "호호감자탕 서면1번가점",
+          "map": "https://maps.google.com/?q=35.154934085636306,129.05717872472138"
+          
+        },
+        {
+          "name": "海雲臺五福豬肉湯飯",
+          "tag": "美食",
+          "price": {
+            "kind": "range",
+            "min": 10000,
+            "max": 20000,
+            "unit": "per_person"
+          },
+          "note": "해운대오복돼지국밥 24H營業",
+          "map": "https://maps.google.com/?q=35.16276372383739,129.16000193451782"
+        },
+        {
+          "name": "秘苑食卓",
+          "tag": "美食",
+          "price": {
+            "kind": "range",
+            "min": 20000,
+            "max": 30000,
+            "unit": "per_person"
+          },
+          "note": "비원식탁 해운대구남로점",
+          "map": "https://maps.google.com/?q=35.161649572990825,129.15982898245122"
+        },
+        {
+          "name": "百年土種蔘雞湯",
+          "tag": "美食",
+          "price": {
+            "kind": "range",
+            "min": 20000,
+            "max": 40000,
+            "unit": "per_person"
+          },
+          "note": "백년토종삼계탕 부산점",
+          "map": "https://maps.google.com/?q=35.190294345448784,129.2169420134905"
+        }
+      ]
+    },
+    {
+      "key": "transport",
+      "label": "交通",
+      "items": [
+        {
+          "name": "釜山金海機場巴士",
+          "tag": "交通",
+          "price": {
+            "kind": "fixed",
+            "amount": 9500,
+            "unit": "per_person"
+          },
+          "note": "機場往市區需要購票(可用信用卡)，回程可用交通卡，座位可充電",
+          "link": "https://www.airport.co.kr/gimhae/cms/frCon/index.do?MENU_ID=170&CONTENTS_NO=1#none"
+        },
+        {
+          "name": "地鐵",
+          "tag": "交通",
+          "price": {
+            "kind": "range",
+            "min": 1600,
+            "max": 20000,
+            "unit": "per_person"
+          },
+          "note": "市區短程交通",
+          "link": "https://www.airport.co.kr/gimhaechn/cms/frCon/index.do?MENU_ID=150&CONTENTS_NO=2"
+        },
+        {
+          "name": "Uber 計程車",
+          "tag": "計程車",
+          "price": {
+            "kind": "range",
+            "min": 10000,
+            "max": 40000,
+            "unit": "per_person"
+          },
+          "note": "叫車方便，可能比Kakao貴一點"
+        }
+      ]
+    }
+  ],
+  "days": [
+    {
+      "key": "day1",
+      "label": "Day 1",
+      "title": "抵達釜山｜海雲臺 × 散步 × 夜景",
+      "theme": "輕鬆適應",
+      "hero": "夜景",
+      "stops": [
+        {
+          "id": "gimhae-airport",
+          "start_time": "06:00",
+          "end_time": "07:00",
+          "duration_min": 60,
+          "transit_to_next_min": 60,
+          "name": "金海機場",
+          "maps_label": "Gimhae Airport",
+          "short_address": "釜山",
+          "type": "交通",
+          "price": {
+            "kind": "fixed",
+            "amount": 9500,
+            "unit": "per_person"
+          },
+          "note": "入境＋前往海雲臺",
+          "next_stop_id": "",
+          "next_label": "",
+          "map": "https://maps.google.com/?q=35.17306171122904,128.94723194191272",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "hotel",
+          "start_time": "08:00",
+          "end_time": "08:30",
+          "duration_min": 30,
+          "transit_to_next_min": 20,
+          "name": "寄放行李",
+          "short_address": "海雲臺",
+          "type": "住宿",
+          "price": {
+            "kind": "free",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
+          "next_stop_id": "haeundae-brunch",
+          "next_label": "海雲臺早午餐",
+          "map": "",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "haeundae-brunch",
+          "start_time": "10:45",
+          "end_time": "12:00",
+          "duration_min": 75,
+          "transit_to_next_min": 30,
+          "name": "海雲臺早午餐",
+          "maps_label": "Haeundae Brunch",
+          "short_address": "海雲臺",
+          "type": "餐飲",
+          "price": {
+            "kind": "range",
+            "min": 10000,
+            "max": 20000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
+          "next_stop_id": "dongbaek",
+          "next_label": "冬柏島",
+          "map": "",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "dongbaek",
+          "start_time": "12:30",
+          "end_time": "14:00",
+          "duration_min": 90,
+          "transit_to_next_min": 120,
+          "name": "冬柏島",
+          "maps_label": "Dongbaekseom",
+          "short_address": "海雲臺",
+          "type": "景點",
+          "price": {
+            "kind": "free",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
+          "next_stop_id": "dinner-day1",
+          "next_label": "晚餐",
+          "map": "https://maps.google.com/?q=35.15496918579717,129.15255169119501",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "dinner-day1",
+          "start_time": "19:00",
+          "end_time": "20:30",
+          "duration_min": 90,
+          "transit_to_next_min": 15,
+          "name": "海雲臺晚餐",
+          "maps_label": "Dinner",
+          "short_address": "海雲臺",
+          "type": "餐飲",
+          "price": {
+            "kind": "range",
+            "min": 15000,
+            "max": 30000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
+          "next_stop_id": "bay101",
+          "next_label": "The Bay 101",
+          "map": "",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "bay101",
+          "start_time": "19:45",
+          "end_time": "21:00",
+          "duration_min": 75,
+          "transit_to_next_min": 0,
+          "name": "The Bay 101",
+          "maps_label": "The Bay 101",
+          "short_address": "海雲臺",
+          "type": "夜景",
+          "price": {
+            "kind": "free",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "夜景",
+          "map": "https://maps.google.com/?q=35.15681459463301,129.15202495645573",
+          "highlight": true,
+          "photos": []
+        }
+      ]
+    },
+    {
+      "key": "day2",
+      "label": "Day 2",
+      "title": "松島 × 甘川 × 南浦",
+      "theme": "海景 + 彩色村",
+      "hero": "松島海上纜車",
+      "stops": [
+        {
+          "id": "songdo-cable",
+          "start_time": "10:00",
+          "end_time": "10:30",
+          "duration_min": 30,
+          "transit_to_next_min": 5,
+          "name": "松島海上纜車",
+          "maps_label": "Songdo Cable Car",
+          "short_address": "松島",
+          "type": "體驗",
+          "price": {
+            "kind": "fixed",
+            "amount": 17000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
+          "next_stop_id": "songdo-walk",
+          "next_label": "岩南公園",
+          "map": "https://maps.google.com/?q=35.076571959629206,129.02366281307465",
+          "highlight": true,
+          "photos": []
+        },
+        {
+          "id": "songdo-walk",
+          "start_time": "10:30",
+          "end_time": "12:00",
+          "duration_min": 90,
+          "transit_to_next_min": 30,
+          "name": "岩南公園",
+          "maps_label": "Skywalk",
+          "short_address": "松島",
+          "type": "景點",
+          "price": {
+            "kind": "free",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
+          "next_stop_id": "gamcheon",
+          "next_label": "甘川文化村",
+          "map": "",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "gamcheon",
+          "start_time": "15:00",
+          "end_time": "17:00",
+          "duration_min": 120,
+          "transit_to_next_min": 30,
+          "name": "甘川文化村",
+          "maps_label": "Gamcheon",
+          "short_address": "釜山",
+          "type": "景點",
+          "price": {
+            "kind": "free",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
+          "next_stop_id": "nampo",
+          "next_label": "南浦",
+          "map": "https://maps.google.com/?q=35.09757471214795,129.01054948239093",
+          "highlight": true,
+          "photos": []
+        },
+        {
+          "id": "nampo",
+          "start_time": "17:30",
+          "end_time": "21:30",
+          "duration_min": 240,
+          "transit_to_next_min": 30,
+          "name": "南浦",
+          "maps_label": "Nampo",
+          "short_address": "釜山",
+          "type": "購物+吃飯",
+          "price": {
+            "kind": "range",
+            "min": 0,
+            "max": 400000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "BIFF / 國際市場",
+          "map": "https://maps.google.com/?q=35.09845212870406,129.02920642943687",
+          "highlight": true,
+          "photos": []
+        }
+      ]
+    },
+    {
+      "key": "day3",
+      "label": "Day 3",
+      "title": "Blue Line × 青沙浦 × Luge × Outlet",
+      "theme": "刺激體驗 + 海景散步 + 購物",
+      "hero": "Skyline Luge",
+      "stops": [
+        {
+          "id": "haeundae-beach",
+          "start_time": "09:30",
+          "end_time": "09:40",
+          "duration_min": 10,
+          "transit_to_next_min": 10,
+          "name": "海雲臺海水浴場出發",
+          "maps_label": "Haeundae Beach",
+          "short_address": "海雲臺",
+          "type": "交通",
+          "price": {
+            "kind": "fixed",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "從海雲臺步行前往 Mipo 站",
+          "next_stop_id": "mipo-station",
+          "next_label": "Mipo 站",
+          "map": "https://maps.google.com/?q=35.15906529192301,129.16031981818227",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "mipo-station",
+          "start_time": "09:40",
+          "end_time": "09:50",
+          "duration_min": 10,
+          "transit_to_next_min": 10,
+          "name": "Mipo 站",
+          "maps_label": "Haeundae Blueline Park Mipo Station",
+          "short_address": "海雲臺",
+          "type": "交通",
+          "price": {
+            "kind": "fixed",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "步行抵達，準備搭乘 Beach Train",
+          "next_stop_id": "beach-train",
+          "next_label": "Beach Train",
+          "map": "https://maps.google.com/?q=35.158696891041664,129.17274380971983",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "beach-train",
+          "start_time": "10:00",
+          "end_time": "10:25",
+          "duration_min": 25,
+          "transit_to_next_min": 5,
+          "name": "Beach Train（Mipo → 青沙浦）",
+          "maps_label": "Beach Train",
+          "short_address": "海岸線",
+          "type": "體驗",
+          "price": {
+            "kind": "fixed",
+            "amount": 16000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "BIG5 使用項目之一",
+          "next_stop_id": "cheongsapo-walk",
+          "next_label": "青沙浦散步",
+          "map": "",
+          "highlight": true,
+          "photos": []
+        },
+        {
+          "id": "cheongsapo-walk",
+          "start_time": "10:30",
+          "end_time": "11:40",
+          "duration_min": 70,
+          "transit_to_next_min": 0,
+          "name": "青沙浦散步",
+          "maps_label": "Cheongsapo",
+          "short_address": "青沙浦",
+          "type": "景點",
+          "price": {
+            "kind": "free",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "展望台、燈塔",
+          "next_stop_id": "cheongsapo-lunch",
+          "next_label": "青沙浦午餐",
+          "map": "https://maps.google.com/?q=35.16149653819312,129.19184420341438",
+          "highlight": true,
+          "photos": []
+        },
+        {
+          "id": "cheongsapo-lunch",
+          "start_time": "11:40",
+          "end_time": "12:40",
+          "duration_min": 60,
+          "transit_to_next_min": 10,
+          "name": "青沙浦午餐",
+          "maps_label": "",
+          "short_address": "青沙浦",
+          "type": "餐飲",
+          "price": {
+            "kind": "range",
+            "min": 20000,
+            "max": 35000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "以烤貝類 / 海鮮餐為主",
+          "next_stop_id": "cheongsapo-to-osiria",
+          "next_label": "前往 OSIRIA",
+          "map": "",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "cheongsapo-to-osiria",
+          "start_time": "12:50",
+          "end_time": "13:15",
+          "duration_min": 25,
+          "transit_to_next_min": 5,
+          "name": "青沙浦 → OSIRIA",
+          "maps_label": "Skyline Luge Busan",
+          "short_address": "計程車",
+          "type": "交通",
+          "price": {
+            "kind": "range",
+            "min": 15000,
+            "max": 20000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "計程車移動，最省時間",
+          "next_stop_id": "skyline-luge",
+          "next_label": "Skyline Luge",
+          "map": "",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "skyline-luge",
+          "start_time": "13:20",
+          "end_time": "15:20",
+          "duration_min": 120,
+          "transit_to_next_min": 15,
+          "name": "Skyline Luge",
+          "maps_label": "Skyline Luge Busan",
+          "short_address": "OSIRIA",
+          "type": "體驗",
+          "price": {
+            "kind": "fixed",
+            "amount": 30000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "BIG5 使用項目之一，建議預留至少 2 小時",
+          "next_stop_id": "lotte-outlet-osiria",
+          "next_label": "Lotte Outlet",
+          "map": "https://maps.google.com/?q=35.194267096194736,129.2186171400645",
+          "highlight": true,
+          "photos": []
+        },
+        {
+          "id": "lotte-outlet-osiria",
+          "start_time": "15:30",
+          "end_time": "17:30",
+          "duration_min": 120,
+          "transit_to_next_min": 70,
+          "name": "Lotte Premium Outlet 東釜山",
+          "maps_label": "Lotte Premium Outlet Dongbusan",
+          "short_address": "OSIRIA",
+          "type": "購物",
+          "price": {
+            "kind": "range",
+            "min": 0,
+            "max": 400000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
+          "next_stop_id": "hotel",
+          "next_label": "Hotel",
+          "map": "https://maps.google.com/?q=35.191871570314085,129.21381462841964",
+          "highlight": false,
+          "photos": []
+        }
+      ]
+    },
+    {
+      "key": "day4",
+      "label": "Day 4",
+      "title": "影島 × 南浦",
+      "theme": "文青散步 + 展覽 + 城市逛街",
+      "hero": "ARTE Museum",
+      "stops": [
+        {
+          "id": "haeundae-to-yeongdo",
+          "start_time": "09:30",
+          "end_time": "10:00",
+          "duration_min": 30,
+          "transit_to_next_min": 0,
+          "name": "海雲臺 → 影島",
+          "maps_label": "Taxi to Yeongdo",
+          "short_address": "計程車",
+          "type": "交通",
+          "price": {
+            "kind": "range",
+            "min": 25000,
+            "max": 30000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "計程車約 30 分鐘",
+          "next_stop_id": "arte-museum-busan",
+          "next_label": "ARTE Museum",
+          "map": "",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "arte-museum-busan",
+          "start_time": "10:00",
+          "end_time": "11:30",
+          "duration_min": 90,
+          "transit_to_next_min": 70,
+          "name": "ARTE Museum",
+          "maps_label": "ARTE Museum Busan",
+          "short_address": "影島",
+          "type": "展覽",
+          "price": {
+            "kind": "fixed",
+            "amount": 22000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "BIG5 使用項目之一",
+          "next_stop_id": "nampo",
+          "next_label": "前往南浦",
+          "map": "https://maps.google.com/?q=35.087261314652395,129.07638372656834",
+          "highlight": true,
+          "photos": []
+        },
+        {
+          "id": "gwangbokro",
+          "start_time": "13:00",
+          "end_time": "19:00",
+          "duration_min": 360,
+          "transit_to_next_min": 30,
+          "name": "逛街+吃吃喝喝",
+          "maps_label": "Gwangbok-ro",
+          "short_address": "南浦",
+          "type": "購物",
+          "price": {
+            "kind": "range",
+            "min": 0,
+            "max": 4000000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
+          "next_stop_id": "nampo-to-haeundae",
+          "next_label": "回海雲臺",
+          "map": "https://maps.google.com/?q=35.1014803597573,129.02820852656882",
+          "highlight": true,
+          "photos": []
+        }
+      ]
+    },
+    {
+      "key": "day5",
+      "label": "Day 5",
+      "title": "SPA x 最後購物 × 回程",
+      "theme": "SPA + 最後購物 + 回機場",
+      "hero": "SPA",
+      "stops": [
+        {
+          "id": "spa-land",
+          "start_time": "10:00",
+          "end_time": "14:00",
+          "duration_min": 240,
+          "transit_to_next_min": 30,
+          "name": "Spa Land",
+          "maps_label": "Spa Land Centum City",
+          "short_address": "Centum City",
+          "type": "溫泉",
+          "price": {
+            "kind": "fixed",
+            "amount": 25000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "BIG5 使用項目之一",
+          "map": "https://maps.google.com/?q=35.16841788156523,129.1295493429643",
+          "highlight": true,
+          "photos": []
+        },
+        {
+          "id": "homeplus-shopping",
+          "start_time": "14:00",
+          "end_time": "15:00",
+          "duration_min": 60,
+          "transit_to_next_min": 10,
+          "name": "超市",
+          "maps_label": "homeplus",
+          "short_address": "homeplus",
+          "type": "購物",
+          "price": {
+            "kind": "range",
+            "min": 0,
+            "max": 80000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "最後採買",
+          "next_stop_id": "olive-young-shopping",
+          "next_label": "olive-young",
+          "map": "",
+          "highlight": true,
+          "photos": []
+        },
+        {
+          "id": "olive-young-shopping",
+          "start_time": "14:00",
+          "end_time": "15:00",
+          "duration_min": 60,
+          "transit_to_next_min": 10,
+          "name": "olive-young",
+          "maps_label": "olive-young",
+          "short_address": "olive-young",
+          "type": "購物",
+          "price": {
+            "kind": "range",
+            "min": 0,
+            "max": 100000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "最後採買",
+          "next_stop_id": "return-hotel-luggage",
+          "next_label": "回飯店拿行李",
+          "map": "",
+          "highlight": true,
+          "photos": []
+        },
+        {
+          "id": "return-hotel-luggage",
+          "start_time": "16:30",
+          "end_time": "17:00",
+          "duration_min": 30,
+          "transit_to_next_min": 30,
+          "name": "回飯店拿行李",
+          "maps_label": "Haeundae Hotel",
+          "short_address": "海雲臺",
+          "type": "交通",
+          "price": {
+            "kind": "free",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "整理行李後直接前往機場",
+          "next_stop_id": "to-gimhae-airport",
+          "next_label": "前往機場",
+          "map": "",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "to-gimhae-airport",
+          "start_time": "17:30",
+          "end_time": "18:30",
+          "duration_min": 60,
+          "transit_to_next_min": 0,
+          "name": "海雲臺 → 金海機場",
+          "maps_label": "Gimhae Airport",
+          "short_address": "機場線",
+          "type": "交通",
+          "price": {
+            "kind": "fixed",
+            "amount": 9500,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "建議抓 18:30–19:00 抵達，先辦退稅",
+          "next_stop_id": "airport-tax-refund",
+          "next_label": "機場退稅",
+          "map": "",
+          "highlight": false,
+          "photos": []
+        },
+        {
+          "id": "airport-tax-refund",
+          "start_time": "18:30",
+          "end_time": "19:00",
+          "duration_min": 30,
+          "transit_to_next_min": 0,
+          "name": "金海機場退稅 / 出境準備",
+          "maps_label": "Gimhae Airport Tax Refund",
+          "short_address": "金海機場",
+          "type": "交通",
+          "price": {
+            "kind": "free",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "旅程收尾",
+          "map": "",
+          "highlight": false,
+          "photos": []
+        }
+      ]
+    }
+  ],
+  "reminders": [
+    "早晚溫差大，需要有一些雨備方案"
+  ]
+}
