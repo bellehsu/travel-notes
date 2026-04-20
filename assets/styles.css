@@ -510,13 +510,125 @@ iframe {
   margin-top: 14px;
 }
 
+.spot-photo-wrap {
+  position: relative;
+}
+
 .spot-photo {
   width: 100%;
-  height: 120px;
-  object-fit: cover;
+  height: 140px;
+  object-fit: contain; /* 關鍵：完整顯示 */
   border-radius: 14px;
   border: 1px solid var(--line);
   background: #f8fafc;
+  display: block;
+  cursor: zoom-in;
+}
+
+/* hover 預覽層 */
+.spot-photo-preview {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 10px);
+  transform: translateX(-50%);
+  width: min(360px, 80vw);
+  max-height: 420px;
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 50;
+  transition: opacity 0.18s ease;
+}
+
+.spot-photo-preview-img {
+  width: 100%;
+  max-height: 380px;
+  object-fit: contain; /* 預覽也完整顯示 */
+  display: block;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.spot-photo-wrap:hover .spot-photo-preview {
+  opacity: 1;
+  visibility: visible;
+}
+.photo-slider {
+  position: relative;
+  margin-top: 14px;
+}
+
+.photo-slider.single-photo .slider-track {
+  overflow: hidden;
+}
+
+.slider-track {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  border-radius: 16px;
+  scrollbar-width: thin;
+}
+
+.slide {
+  flex: 0 0 100%;
+  aspect-ratio: 16 / 9;
+  background: #111; /* 很重要：直圖時的背景 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 橫圖 */
+.slide img.landscape {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 直圖 */
+.slide img.portrait {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+  max-width: 100%;
+}
+
+/* 控制按鈕 */
+.slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.45);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.slider-btn.left {
+  left: 10px;
+}
+
+.slider-btn.right {
+  right: 10px;
+}
+
+.slider-btn:hover {
+  background: rgba(17, 24, 39, 0.65);
 }
 
 .map-focus-subtitle {
@@ -861,5 +973,15 @@ iframe {
 
     .trip-card-top {
         flex-direction: column;
+    }
+
+    .slide {
+        aspect-ratio: 4 / 3;
+    }
+
+    .slider-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 20px;
     }
 }

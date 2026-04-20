@@ -3,20 +3,20 @@
     {
       "slug": "busan-5d4n-202604",
       "title": "釜山 5天4夜",
-      "summary": "春季釜山美食＋景點行程",
-      "coverImage": "",
+      "summary": "春季釜山自由行，整合櫻花、海景、南浦與每日行程。",
+      "coverImage": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260403_161316.jpg",
       "days": 5,
       "nights": 4,
-      "tags": ["韓國", "釜山", "美食", "春季"]
+      "tags": ["釜山", "櫻花", "海景", "自由行"]
     },
     {
       "slug": "xiaoliuqiu-3d2n-202605",
       "title": "小琉球 3天2夜",
-      "summary": "浮潛 × 海龜 × 慢活島嶼",
+      "summary": "浮潛、海龜、慢活海島行程。",
       "coverImage": "",
       "days": 3,
       "nights": 2,
-      "tags": ["台灣", "小琉球", "海島"]
+      "tags": ["小琉球", "浮潛", "海島"]
     }
   ]
 }

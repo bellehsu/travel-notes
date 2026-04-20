@@ -120,7 +120,8 @@
             "max": 100000,
             "unit": "per_person"
           },
-          "note": "地點方便但偏貴"
+          "note": "地點方便但偏貴",
+          "show_in_map_info": false
         }
       ]
     },
@@ -132,9 +133,9 @@
           "name": "釜山通行證 VISIT BUSAN PASS",
           "tag": "BIG5",
           "price": {
-              "kind": "fixed",
-              "amount": 65000,
-              "unit": "per_person"
+            "kind": "fixed",
+            "amount": 65000,
+            "unit": "per_person"
           },
           "note": "省錢方案",
           "link": "https://www.klook.com/zh-TW/activity/81576-visit-busan-pass/?_currency=TWD&campaignid=23662356155&adgroupid=200039880931&targetid=aud-2285051243511%3Akwd-2435220485461&matchtype=b&device=c&creative=771002596722&extensionid=&keyword=%E9%87%9C%E5%B1%B1%20busan%20pass&loc_interest_ms=&loc_physical_ms=9198261&network=g&utm_content=campaignid_23662356155_adgroupid_200039880931&gad_source=1&gad_campaignid=23662356155&gbraid=0AAAAACa_CWwML56vZzV1a3dXJcHrvRovn&gclid=Cj0KCQjwkYLPBhC3ARIsAIyHi3SHedhHYsRpLakOiHcRwXoka07Dreue3Y46UFaI19OtRRtSY8iYcOAaAtbcEALw_wcB"
@@ -180,7 +181,6 @@
           },
           "note": "부산댁증산점",
           "map": "https://maps.google.com/?q=35.15859284556345,129.06154732657018"
-          
         },
         {
           "name": "馬鈴薯燉排骨",
@@ -193,7 +193,6 @@
           },
           "note": "호호감자탕 서면1번가점",
           "map": "https://maps.google.com/?q=35.154934085636306,129.05717872472138"
-          
         },
         {
           "name": "海雲臺五福豬肉湯飯",
@@ -246,7 +245,8 @@
             "unit": "per_person"
           },
           "note": "機場往市區需要購票(可用信用卡)，回程可用交通卡，座位可充電",
-          "link": "https://www.airport.co.kr/gimhae/cms/frCon/index.do?MENU_ID=170&CONTENTS_NO=1#none"
+          "link": "https://www.airport.co.kr/gimhae/cms/frCon/index.do?MENU_ID=170&CONTENTS_NO=1#none",
+          "show_in_map_info": false
         },
         {
           "name": "地鐵",
@@ -258,7 +258,8 @@
             "unit": "per_person"
           },
           "note": "市區短程交通",
-          "link": "https://www.airport.co.kr/gimhaechn/cms/frCon/index.do?MENU_ID=150&CONTENTS_NO=2"
+          "link": "https://www.airport.co.kr/gimhaechn/cms/frCon/index.do?MENU_ID=150&CONTENTS_NO=2",
+          "show_in_map_info": false
         },
         {
           "name": "Uber 計程車",
@@ -269,7 +270,8 @@
             "max": 40000,
             "unit": "per_person"
           },
-          "note": "叫車方便，可能比Kakao貴一點"
+          "note": "叫車方便，可能比Kakao貴一點",
+          "show_in_map_info": false
         }
       ]
     }
@@ -302,7 +304,8 @@
           "next_label": "",
           "map": "https://maps.google.com/?q=35.17306171122904,128.94723194191272",
           "highlight": false,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "hotel",
@@ -324,7 +327,19 @@
           "next_label": "海雲臺早午餐",
           "map": "",
           "highlight": false,
-          "photos": []
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260331_150950.jpg",
+              "alt": "海雲臺住宿"
+            },
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260331_150926.jpg",
+              "alt": "海雲臺住宿浴室"
+            }
+          ],
+          "show_in_map_info": false
         },
         {
           "id": "haeundae-brunch",
@@ -348,7 +363,14 @@
           "next_label": "冬柏島",
           "map": "",
           "highlight": false,
-          "photos": []
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260331_195111.jpg",
+              "alt": "海雲臺五福豬肉湯飯"
+            }
+          ],
+          "show_in_map_info": false
         },
         {
           "id": "dongbaek",
@@ -357,7 +379,7 @@
           "duration_min": 90,
           "transit_to_next_min": 120,
           "name": "冬柏島",
-          "maps_label": "Dongbaekseom",
+          "maps_label": "冬柏島",
           "short_address": "海雲臺",
           "type": "景點",
           "price": {
@@ -371,7 +393,8 @@
           "next_label": "晚餐",
           "map": "https://maps.google.com/?q=35.15496918579717,129.15255169119501",
           "highlight": false,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "dinner-day1",
@@ -395,7 +418,14 @@
           "next_label": "The Bay 101",
           "map": "",
           "highlight": false,
-          "photos": []
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260331_202814.jpg",
+              "alt": "醬蟹"
+            }
+          ],
+          "show_in_map_info": false
         },
         {
           "id": "bay101",
@@ -416,7 +446,14 @@
           "note": "夜景",
           "map": "https://maps.google.com/?q=35.15681459463301,129.15202495645573",
           "highlight": true,
-          "photos": []
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260331_223257.jpg",
+              "alt": ""
+            }
+          ],
+          "show_in_map_info": false
         }
       ]
     },
@@ -448,7 +485,14 @@
           "next_label": "岩南公園",
           "map": "https://maps.google.com/?q=35.076571959629206,129.02366281307465",
           "highlight": true,
-          "photos": []
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260402_133309.jpg",
+              "alt": ""
+            }
+          ],
+          "show_in_map_info": false
         },
         {
           "id": "songdo-walk",
@@ -471,7 +515,14 @@
           "next_label": "甘川文化村",
           "map": "",
           "highlight": false,
-          "photos": []
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260402_141000.jpg",
+              "alt": ""
+            }
+          ],
+          "show_in_map_info": false
         },
         {
           "id": "gamcheon",
@@ -494,7 +545,14 @@
           "next_label": "南浦",
           "map": "https://maps.google.com/?q=35.09757471214795,129.01054948239093",
           "highlight": true,
-          "photos": []
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260402_165033.jpg",
+              "alt": ""
+            }
+          ],
+          "show_in_map_info": false
         },
         {
           "id": "nampo",
@@ -516,7 +574,8 @@
           "note": "BIFF / 國際市場",
           "map": "https://maps.google.com/?q=35.09845212870406,129.02920642943687",
           "highlight": true,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         }
       ]
     },
@@ -548,7 +607,8 @@
           "next_label": "Mipo 站",
           "map": "https://maps.google.com/?q=35.15906529192301,129.16031981818227",
           "highlight": false,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "mipo-station",
@@ -571,7 +631,8 @@
           "next_label": "Beach Train",
           "map": "https://maps.google.com/?q=35.158696891041664,129.17274380971983",
           "highlight": false,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "beach-train",
@@ -589,12 +650,13 @@
             "unit": "per_person"
           },
           "address": "",
-          "note": "BIG5 使用項目之一",
+          "note": "BIG5 使用項目之一，先排隊換票，再去附近逛逛",
           "next_stop_id": "cheongsapo-walk",
           "next_label": "青沙浦散步",
           "map": "",
           "highlight": true,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "cheongsapo-walk",
@@ -617,7 +679,8 @@
           "next_label": "青沙浦午餐",
           "map": "https://maps.google.com/?q=35.16149653819312,129.19184420341438",
           "highlight": true,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "cheongsapo-lunch",
@@ -641,7 +704,8 @@
           "next_label": "前往 OSIRIA",
           "map": "",
           "highlight": false,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "cheongsapo-to-osiria",
@@ -665,7 +729,8 @@
           "next_label": "Skyline Luge",
           "map": "",
           "highlight": false,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "skyline-luge",
@@ -683,12 +748,19 @@
             "unit": "per_person"
           },
           "address": "",
-          "note": "BIG5 使用項目之一，建議預留至少 2 小時",
+          "note": "BIG5 使用項目之一，建議預留至少 2 小時，要小心自己隨身物品，有看到有人手機跟小孩鞋子掉在防護網上",
           "next_stop_id": "lotte-outlet-osiria",
           "next_label": "Lotte Outlet",
           "map": "https://maps.google.com/?q=35.194267096194736,129.2186171400645",
           "highlight": true,
-          "photos": []
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260401_151408.jpg",
+              "alt": "Skyline-luge"
+            }
+          ],
+          "show_in_map_info": false
         },
         {
           "id": "lotte-outlet-osiria",
@@ -712,7 +784,8 @@
           "next_label": "Hotel",
           "map": "https://maps.google.com/?q=35.191871570314085,129.21381462841964",
           "highlight": false,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         }
       ]
     },
@@ -720,39 +793,71 @@
       "key": "day4",
       "label": "Day 4",
       "title": "影島 × 南浦",
-      "theme": "文青散步 + 展覽 + 城市逛街",
+      "theme": "散步 + 展覽 + 城市逛街",
       "hero": "ARTE Museum",
       "stops": [
         {
           "id": "haeundae-to-yeongdo",
-          "start_time": "09:30",
-          "end_time": "10:00",
+          "start_time": "10:30",
+          "end_time": "11:00",
           "duration_min": 30,
           "transit_to_next_min": 0,
-          "name": "海雲臺 → 影島",
-          "maps_label": "Taxi to Yeongdo",
-          "short_address": "計程車",
+          "name": "海雲臺 → 南埔",
+          "maps_label": "地鐵",
+          "short_address": "地鐵",
           "type": "交通",
           "price": {
             "kind": "range",
-            "min": 25000,
-            "max": 30000,
+            "min": 1600,
+            "max": 3000,
             "unit": "per_person"
           },
           "address": "",
-          "note": "計程車約 30 分鐘",
+          "note": "",
+          "next_stop_id": "down-towner",
+          "next_label": "hamburger",
+          "map": "",
+          "highlight": false,
+          "photos": [],
+          "show_in_map_info": false
+        },
+        {
+          "id": "down-towner",
+          "start_time": "11:00",
+          "end_time": "12:00",
+          "duration_min": 120,
+          "transit_to_next_min": 30,
+          "name": "漢堡",
+          "maps_label": "",
+          "short_address": "",
+          "type": "餐飲",
+          "price": {
+            "kind": "range",
+            "min": 10000,
+            "max": 20000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
           "next_stop_id": "arte-museum-busan",
           "next_label": "ARTE Museum",
           "map": "",
           "highlight": false,
-          "photos": []
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260403_120806.jpg",
+              "alt": "arte-cafe"
+            }
+          ],
+          "show_in_map_info": false
         },
         {
           "id": "arte-museum-busan",
-          "start_time": "10:00",
-          "end_time": "11:30",
-          "duration_min": 90,
-          "transit_to_next_min": 70,
+          "start_time": "15:00",
+          "end_time": "16:00",
+          "duration_min": 60,
+          "transit_to_next_min": 5,
           "name": "ARTE Museum",
           "maps_label": "ARTE Museum Busan",
           "short_address": "影島",
@@ -768,13 +873,75 @@
           "next_label": "前往南浦",
           "map": "https://maps.google.com/?q=35.087261314652395,129.07638372656834",
           "highlight": true,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
+        },
+        {
+          "id": "arte_cafe",
+          "start_time": "16:30",
+          "end_time": "17:00",
+          "duration_min": 30,
+          "transit_to_next_min": 40,
+          "name": "ARTE CAFE",
+          "maps_label": "ARTE CAFE",
+          "short_address": "影島",
+          "type": "餐飲",
+          "price": {
+            "kind": "range",
+            "min": 4000,
+            "max": 8000,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "展覽有折價券可以使用",
+          "next_stop_id": "nampo",
+          "next_label": "前往南浦",
+          "map": "https://maps.google.com/?q=35.087261314652395,129.07638372656834",
+          "highlight": true,
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260403_150642.jpg",
+              "alt": "arte-cafe"
+            }
+          ],
+          "show_in_map_info": false
+        },
+        {
+          "id": "dongsam_haesucheollo",
+          "start_time": "17:30",
+          "end_time": "18:30",
+          "duration_min": 60,
+          "transit_to_next_min": 60,
+          "name": "櫻花",
+          "maps_label": "",
+          "short_address": "",
+          "type": "散步",
+          "price": {
+            "kind": "free",
+            "amount": 0,
+            "unit": "per_person"
+          },
+          "address": "",
+          "note": "",
+          "next_stop_id": "nampo",
+          "next_label": "前往南浦",
+          "map": "https://maps.google.com/?q=35.087261314652395,129.07638372656834",
+          "highlight": true,
+          "photos": [
+            {
+              "type": "url",
+              "src": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260403_161316.jpg",
+              "alt": "cherry_blossom"
+            }
+          ],
+          "show_in_map_info": false
         },
         {
           "id": "gwangbokro",
-          "start_time": "13:00",
-          "end_time": "19:00",
-          "duration_min": 360,
+          "start_time": "19:30",
+          "end_time": "22:00",
+          "duration_min": 150,
           "transit_to_next_min": 30,
           "name": "逛街+吃吃喝喝",
           "maps_label": "Gwangbok-ro",
@@ -792,7 +959,8 @@
           "next_label": "回海雲臺",
           "map": "https://maps.google.com/?q=35.1014803597573,129.02820852656882",
           "highlight": true,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         }
       ]
     },
@@ -822,7 +990,8 @@
           "note": "BIG5 使用項目之一",
           "map": "https://maps.google.com/?q=35.16841788156523,129.1295493429643",
           "highlight": true,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "homeplus-shopping",
@@ -846,7 +1015,8 @@
           "next_label": "olive-young",
           "map": "",
           "highlight": true,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "olive-young-shopping",
@@ -870,7 +1040,8 @@
           "next_label": "回飯店拿行李",
           "map": "",
           "highlight": true,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "return-hotel-luggage",
@@ -893,7 +1064,8 @@
           "next_label": "前往機場",
           "map": "",
           "highlight": false,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "to-gimhae-airport",
@@ -916,7 +1088,8 @@
           "next_label": "機場退稅",
           "map": "",
           "highlight": false,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         },
         {
           "id": "airport-tax-refund",
@@ -937,7 +1110,8 @@
           "note": "旅程收尾",
           "map": "",
           "highlight": false,
-          "photos": []
+          "photos": [],
+          "show_in_map_info": false
         }
       ]
     }

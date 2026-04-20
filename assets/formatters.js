@@ -97,21 +97,37 @@ export function resolvePhotoSrc(photo) {
 }
 
 export function renderPhotos(photos) {
-  if (!Array.isArray(photos) || !photos.length) return "";
+  const validPhotos = Array.isArray(photos)
+    ? photos.filter((p) => nonEmpty(p?.src))
+    : [];
+
+  if (!validPhotos.length) return "";
+
+  const showControls = validPhotos.length > 1;
+
   return `
-    <div class="photo-strip">
-      ${photos
-        .map(
-          (photo) => `
-            <img
-              class="spot-photo"
-              src="${escapeHtml(resolvePhotoSrc(photo))}"
-              alt="${escapeHtml(photo.alt || "")}"
-              loading="lazy"
-            />`
-        )
-        .join("")}
-    </div>`;
+    <div class="photo-slider${showControls ? "" : " single-photo"}">
+      ${showControls ? `<button class="slider-btn left" data-dir="-1" aria-label="上一張">‹</button>` : ""}
+
+      <div class="slider-track">
+        ${validPhotos
+          .map(
+            (photo) => `
+              <div class="slide">
+                <img
+                  src="${escapeHtml(photo.src)}"
+                  alt="${escapeHtml(photo.alt || "")}"
+                  loading="lazy"
+                />
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+
+      ${showControls ? `<button class="slider-btn right" data-dir="1" aria-label="下一張">›</button>` : ""}
+    </div>
+  `;
 }
 
 export function buildMapButton(mapId) {

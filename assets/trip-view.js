@@ -184,12 +184,16 @@ function renderDaySection(data, defaults) {
     btn.onclick = () => {
       activeKey = day.key;
       renderDayContent(days, activeKey, defaults);
+      attachPhotoSliders();
+      detectImageOrientation();
       syncActiveTab(dayTabs, activeKey);
     };
     dayTabs.appendChild(btn);
   });
 
   renderDayContent(days, activeKey, defaults);
+  attachPhotoSliders();
+  detectImageOrientation();
   syncActiveTab(dayTabs, activeKey);
 }
 
@@ -231,6 +235,17 @@ function renderStopCard(day, stop, idx, defaults) {
   const priceText = resolveStopPriceText(stop, defaults);
   const photosHtml = renderPhotos(stop.photos);
 
+  const title = stop.name || stop.maps_label || `行程點 ${idx + 1}`;
+  const address = stop.address?.trim() || "";
+  const note = stop.note?.trim() || "";
+
+  const metaParts = [
+    timeText ? `<span class="time-pill">${escapeHtml(timeText)}</span>` : "",
+    durationText ? `<span class="pill">停留 ${escapeHtml(durationText)}</span>` : "",
+    nonEmpty(stop.type) ? `<span class="pill">${escapeHtml(stop.type)}</span>` : "",
+    transitText ? `<span class="pill">移動 ${escapeHtml(transitText)}</span>` : "",
+  ].filter(Boolean).join("");
+
   const extras = renderExtraRows(
     extraFields(stop, [
       "id",
@@ -254,6 +269,7 @@ function renderStopCard(day, stop, idx, defaults) {
       "map",
       "highlight",
       "photos",
+      "show_in_map_info",
     ])
   );
 
@@ -262,36 +278,32 @@ function renderStopCard(day, stop, idx, defaults) {
       <div class="stop-top">
         <div>
           <div class="stop-title">
-            ${escapeHtml(stop.name || "")}
+            ${escapeHtml(title)}
             ${stop.highlight ? ' <span class="badge">重點</span>' : ""}
           </div>
-          <div class="stop-meta">
-            ${timeText ? `<span class="time-pill">${escapeHtml(timeText)}</span>` : ""}
-            ${durationText ? `<span class="pill">停留 ${escapeHtml(durationText)}</span>` : ""}
-            ${nonEmpty(stop.type) ? `<span class="pill">${escapeHtml(stop.type)}</span>` : ""}
-            ${transitText ? `<span class="pill">移動 ${escapeHtml(transitText)}</span>` : ""}
-          </div>
+          ${metaParts ? `<div class="stop-meta">${metaParts}</div>` : ""}
         </div>
         ${priceText ? `<div class="cost-pill">${escapeHtml(priceText)}</div>` : ""}
       </div>
 
-      <div class="addr-box">
-        <div class="box">
-          <div class="small muted">地址</div>
-          <div>${escapeHtml(stop.address || "—")}</div>
+      ${address ? `
+        <div class="addr-box">
+          <div class="box">
+            <div class="small muted">地址</div>
+            <div>${escapeHtml(address)}</div>
+          </div>
         </div>
-      </div>
+      ` : ""}
 
-      ${nonEmpty(stop.note) ? `<div class="stop-note">${escapeHtml(stop.note)}</div>` : ""}
+      ${note ? `<div class="stop-note">${escapeHtml(note)}</div>` : ""}
       ${photosHtml}
       ${extras}
 
-      <div class="actions">
-        ${buildMapButton(mapTarget ? mapId : "")}
-        ${nonEmpty(stop.next_label || stop.next)
-          ? `<span class="pill">前往下一站：${escapeHtml(stop.next_label || stop.next)}</span>`
-          : ""}
-      </div>
+      ${mapTarget ? `
+        <div class="actions">
+          ${buildMapButton(mapId)}
+        </div>
+      ` : ""}
     </div>
   `;
 }
@@ -430,12 +442,16 @@ function renderStaySection(stayGroups) {
     btn.onclick = () => {
       activeKey = group.key;
       renderStayContent(stayGroups, activeKey);
+      attachPhotoSliders();
+      detectImageOrientation();
       syncActiveTab(stayTabs, activeKey);
     };
     stayTabs.appendChild(btn);
   });
 
   renderStayContent(stayGroups, activeKey);
+  attachPhotoSliders();
+  detectImageOrientation();
   syncActiveTab(stayTabs, activeKey);
 }
 
@@ -464,7 +480,7 @@ function renderStayCard(group, item, idx) {
   const photosHtml = renderPhotos(item.photos);
 
   const extras = renderExtraRows(
-    extraFields(item, ["area", "name", "note", "link", "map", "address", "photos"])
+    extraFields(item, ["area", "name", "note", "link", "map", "address", "photos", "show_in_map_info"])
   );
 
   return `
@@ -503,12 +519,16 @@ function renderShopSection(shopGroups, defaults) {
     btn.onclick = () => {
       activeKey = group.key;
       renderShopContent(shopGroups, activeKey, defaults);
+      attachPhotoSliders();
+      detectImageOrientation();
       syncActiveTab(shopTabs, activeKey);
     };
     shopTabs.appendChild(btn);
   });
 
   renderShopContent(shopGroups, activeKey, defaults);
+  attachPhotoSliders();
+  detectImageOrientation();
   syncActiveTab(shopTabs, activeKey);
 }
 
@@ -539,7 +559,7 @@ function renderShopCard(group, item, idx, defaults) {
   const photosHtml = renderPhotos(item.photos);
 
   const extras = renderExtraRows(
-    extraFields(item, ["name", "tag", "price", "price_options", "note", "link", "map", "address", "photos"])
+    extraFields(item, ["name", "tag", "price", "price_options", "note", "link", "map", "address", "photos", "show_in_map_info"])
   );
 
   return `
@@ -565,10 +585,26 @@ function renderShopCard(group, item, idx, defaults) {
 }
 
 function renderMapSection(data, stayGroups, shopGroups, defaults) {
-  const locations = collectLocations(data, stayGroups, shopGroups, defaults);
-  rebuildLocationList(locations);
+  const allLocations = collectLocations(data, stayGroups, shopGroups, defaults);
+  state.currentLocations = allLocations;
+
+  const visibleLocations = allLocations.filter((loc) => loc.showInMapInfo);
+  rebuildLocationList(visibleLocations);
+
+  if (visibleLocations.length) {
+    focusMapById(visibleLocations[0].id);
+  } else if (allLocations.length) {
+    focusMapById(allLocations[0].id);
+  } else {
+    renderEmptyMapState();
+  }
+
   attachMapInteractions();
   updateActiveStates();
+}
+
+function shouldShowInMapInfo(item) {
+  return item?.show_in_map_info !== false;
 }
 
 function collectLocations(data, stayGroups, shopGroups, defaults) {
@@ -591,6 +627,7 @@ function collectLocations(data, stayGroups, shopGroups, defaults) {
         subtitle: [stop.type, timeText, priceText].filter(Boolean).join("｜"),
         address: stop.short_address || stop.address || "",
         order: seq++,
+        showInMapInfo: shouldShowInMapInfo(stop),
       });
     });
   });
@@ -608,6 +645,7 @@ function collectLocations(data, stayGroups, shopGroups, defaults) {
         subtitle: item.note || item.reference || "",
         address: item.address || item.area || "",
         order: seq++,
+        showInMapInfo: shouldShowInMapInfo(item),
       });
     });
   });
@@ -628,6 +666,7 @@ function collectLocations(data, stayGroups, shopGroups, defaults) {
         subtitle: [item.tag, itemPrice, item.note].filter(Boolean).join("｜"),
         address: item.address || "",
         order: seq++,
+        showInMapInfo: shouldShowInMapInfo(item),
       });
     });
   });
@@ -636,25 +675,14 @@ function collectLocations(data, stayGroups, shopGroups, defaults) {
 }
 
 function rebuildLocationList(locations) {
-  state.currentLocations = locations;
-
   const box = document.getElementById("locationList");
-  const mapFrame = document.getElementById("mapFrame");
-  const mapFocus = document.getElementById("mapFocus");
-
-  if (!box || !mapFrame || !mapFocus) return;
+  if (!box) return;
 
   box.innerHTML = "";
 
-  if (!locations.length) {
-    mapFrame.src = embedUrl("台灣");
-    mapFocus.innerHTML = `<div class="muted">目前沒有可顯示的 map / address 資料。</div>`;
-    return;
-  }
-
-  locations.forEach((loc, idx) => {
+  locations.forEach((loc) => {
     const div = document.createElement("div");
-    div.className = "location" + (idx === 0 ? " active" : "");
+    div.className = "location";
     div.dataset.mapid = loc.id;
     div.innerHTML = `
       <div class="loc-title">${escapeHtml(loc.title)}</div>
@@ -663,8 +691,18 @@ function rebuildLocationList(locations) {
     div.addEventListener("click", () => focusMapById(loc.id));
     box.appendChild(div);
   });
+}
 
-  focusMapById(locations[0].id);
+function renderEmptyMapState() {
+  const mapFrame = document.getElementById("mapFrame");
+  const mapFocus = document.getElementById("mapFocus");
+  const box = document.getElementById("locationList");
+
+  if (box) box.innerHTML = "";
+  if (mapFrame) mapFrame.src = embedUrl("台灣");
+  if (mapFocus) {
+    mapFocus.innerHTML = `<div class="muted">目前沒有可顯示的 map / address 資料。</div>`;
+  }
 }
 
 function focusMapById(mapId) {
@@ -726,6 +764,40 @@ function attachMapInteractions() {
       event.stopPropagation();
       focusMapById(btn.dataset.mapid);
     });
+  });
+}
+
+function attachPhotoSliders() {
+  document.querySelectorAll(".photo-slider").forEach((slider) => {
+    const track = slider.querySelector(".slider-track");
+    const buttons = slider.querySelectorAll(".slider-btn");
+    const slide = track?.querySelector(".slide");
+
+    if (!track || !slide || buttons.length === 0) return;
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const dir = Number(btn.dataset.dir);
+        track.scrollBy({
+          left: dir * slide.clientWidth,
+          behavior: "smooth",
+        });
+      });
+    });
+  });
+}
+
+function detectImageOrientation() {
+  document.querySelectorAll(".slide img").forEach((img) => {
+    img.onload = () => {
+      const ratio = img.naturalWidth / img.naturalHeight;
+
+      if (ratio < 1) {
+        img.classList.add("portrait");
+      } else {
+        img.classList.add("landscape");
+      }
+    };
   });
 }
 

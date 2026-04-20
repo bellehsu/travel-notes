@@ -21,12 +21,38 @@ function renderNotFound() {
   `;
 }
 
+function resolveRouteFromPageContext() {
+  const pageType = document.body.dataset.pageType || "";
+  const tripSlug = document.body.dataset.tripSlug || "";
+
+  if (pageType === "trip" && tripSlug) {
+    return {
+      page: "trip",
+      tripSlug,
+    };
+  }
+
+  if (pageType === "home-static") {
+    return {
+      page: "home-static",
+    };
+  }
+
+  return getRoute();
+}
+
 async function bootstrap() {
   const app = document.getElementById("app");
   if (!app) return;
 
   try {
-    const route = getRoute();
+    const route = resolveRouteFromPageContext();
+
+    // 已經是靜態首頁，不再重複 render
+    if (route.page === "home-static") {
+      return;
+    }
+
     const data = await loadData(route);
 
     switch (route.page) {

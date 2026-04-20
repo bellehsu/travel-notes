@@ -1,0 +1,8 @@
+{
+  "name": "travelhub-static",
+  "private": true,
+  "scripts": {
+    "build:pages": "node scripts/generate-pages.js",
+    "test": "npx serve . -l 8000 "
+  }
+}

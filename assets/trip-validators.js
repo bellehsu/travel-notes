@@ -104,8 +104,8 @@ export function validateTripData(data) {
         return;
       }
 
-      if (!isNonEmptyString(day.key)) {
-        errors.push(`days[${dayIndex}].key 必填`);
+      if (day.key !== undefined && !isNonEmptyString(day.key)) {
+        errors.push(`days[${dayIndex}].key 若提供必須是非空字串`);
       }
 
       if (day.stops !== undefined && !Array.isArray(day.stops)) {
@@ -120,8 +120,8 @@ export function validateTripData(data) {
             return;
           }
 
-          if (!isNonEmptyString(stop.name)) {
-            errors.push(`${path}.name 必填`);
+          if (stop.name !== undefined && typeof stop.name !== "string") {
+            errors.push(`${path}.name 若提供必須是字串`);
           }
 
           if (stop.start_time !== undefined && !isValidTimeHHmm(stop.start_time)) {
@@ -175,8 +175,8 @@ export function validateTripData(data) {
           return;
         }
 
-        if (!isNonEmptyString(item.name)) {
-          errors.push(`${path}.name 必填`);
+        if (item.name !== undefined && typeof item.name !== "string") {
+          errors.push(`${path}.name 若提供必須是字串`);
         }
 
         if (item.price !== undefined) {
@@ -193,8 +193,8 @@ export function validateTripData(data) {
                 errors.push(`${optPath} 必須是 object`);
                 return;
               }
-              if (!isNonEmptyString(opt.label)) {
-                errors.push(`${optPath}.label 必填`);
+              if (opt.label !== undefined && typeof opt.label !== "string") {
+                errors.push(`${optPath}.label 若提供必須是字串`);
               }
               if (typeof opt.amount !== "number") {
                 errors.push(`${optPath}.amount 必須是數字`);
