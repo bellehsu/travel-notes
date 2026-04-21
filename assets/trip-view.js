@@ -19,41 +19,58 @@ import {
   renderPhotos,
   buildMapButton,
 } from "./formatters.js";
-import { normalizeStayGroups, normalizeShopGroups } from "./trip-normalizers.js";
+import { normalizeTripData, normalizeStayGroups, normalizeShopGroups } from "./trip-normalizers.js";
 import { validateTripData } from "./trip-validators.js";
+import { createI18n, resolveLocale } from "./i18n.js";
 
 const state = {
   currentMapId: "",
   currentLocations: [],
+  i18n: createI18n("zh-TW"),
 };
 
 export function renderTripPage(data) {
-  const validation = validateTripData(data);
+  const normalized = normalizeTripData(data);
+  const validation = validateTripData(normalized);
+
   if (!validation.valid) {
     console.error(validation.errors);
-    renderValidationError(validation.errors);
+    renderValidationError(validation.errors, normalized.defaults?.locale);
     return;
   }
 
   resetState();
 
-  const defaults = getDefaults(data);
-  const stayGroups = normalizeStayGroups(data);
-  const shopGroups = normalizeShopGroups(data);
+  const locale = resolveLocale(normalized.defaults?.locale || "zh-TW");
+  state.i18n = createI18n(locale);
+
+  const defaults = getDefaults(normalized);
+  const stayGroups = normalizeStayGroups(normalized);
+  const shopGroups = normalizeShopGroups(normalized);
 
   renderShell();
-  renderHeader(data, defaults);
-  renderReminders(data);
-  renderDaySection(data, defaults);
-  renderBudgetSection(data, defaults);
+  renderHeader(normalized, defaults);
+  renderReminders(normalized);
+  renderDaySection(normalized, defaults);
+  renderBudgetSection(normalized, defaults);
   renderStaySection(stayGroups);
   renderShopSection(shopGroups, defaults);
-  renderMapSection(data, stayGroups, shopGroups, defaults);
+  renderMapSection(normalized, stayGroups, shopGroups, defaults);
 }
 
 function resetState() {
   state.currentMapId = "";
   state.currentLocations = [];
+}
+
+function t(key) {
+  return state.i18n.t(key);
+}
+
+function dayLabel(day, index) {
+  if (nonEmpty(day.label)) return day.label;
+  const key = day.key ?? index + 1;
+  return `${t("day")} ${key}`;
 }
 
 function renderShell() {
@@ -67,15 +84,15 @@ function renderShell() {
         <p id="subtitle"></p>
 
         <div class="meta">
-          <div class="box"><div class="small">日期</div><div id="dates"></div></div>
-          <div class="box"><div class="small">同行人數</div><div id="travelers"></div></div>
-          <div class="box"><div class="small">預算上限</div><div id="budgetPerPerson"></div></div>
-          <div class="box"><div class="small">住宿安排</div><div id="nights"></div></div>
+          <div class="box"><div class="small">${escapeHtml(t("dates"))}</div><div id="dates"></div></div>
+          <div class="box"><div class="small">${escapeHtml(t("travelers"))}</div><div id="travelers"></div></div>
+          <div class="box"><div class="small">${escapeHtml(t("budgetLimit"))}</div><div id="budgetPerPerson"></div></div>
+          <div class="box"><div class="small">${escapeHtml(t("nights"))}</div><div id="nights"></div></div>
         </div>
       </div>
 
       <div class="card" style="margin-top:24px">
-        <div class="section-head"><h2>地圖資訊</h2></div>
+        <div class="section-head"><h2>${escapeHtml(t("mapInfo"))}</h2></div>
         <div class="section-body">
           <div class="map-shell">
             <div class="map-frame-wrap">
@@ -95,7 +112,7 @@ function renderShell() {
       <div class="layout">
         <div class="stack">
           <div class="card">
-            <div class="section-head"><h2 id="dayTabsName">每日行程</h2></div>
+            <div class="section-head"><h2 id="dayTabsName">${escapeHtml(t("itinerary"))}</h2></div>
             <div class="section-body">
               <div class="tabs" id="dayTabs"></div>
               <div id="dayContent"></div>
@@ -105,7 +122,7 @@ function renderShell() {
 
         <div class="stack">
           <div class="card">
-            <div class="section-head"><h2 id="budgetTabsName">預算</h2></div>
+            <div class="section-head"><h2 id="budgetTabsName">${escapeHtml(t("budgetTabsName"))}</h2></div>
             <div class="section-body">
               <div class="tabs" id="budgetTabs"></div>
               <div id="budgetContent"></div>
@@ -113,7 +130,7 @@ function renderShell() {
           </div>
 
           <div class="card">
-            <div class="section-head"><h2 id="stayTabsName">住宿資訊卡</h2></div>
+            <div class="section-head"><h2 id="stayTabsName">${escapeHtml(t("stays"))}</h2></div>
             <div class="section-body">
               <div class="tabs" id="stayTabs"></div>
               <div id="stayContent"></div>
@@ -121,14 +138,14 @@ function renderShell() {
           </div>
 
           <div class="card">
-            <div class="section-head"><h2>行前提醒</h2></div>
+            <div class="section-head"><h2>${escapeHtml(t("reminders"))}</h2></div>
             <div class="section-body"><div class="list" id="reminderList"></div></div>
           </div>
         </div>
       </div>
 
       <div class="card" style="margin-top:24px">
-        <div class="section-head"><h2 id="shopTabsName">店家 / 活動 / 交通資訊卡</h2></div>
+        <div class="section-head"><h2 id="shopTabsName">${escapeHtml(t("shops"))}</h2></div>
         <div class="section-body">
           <div class="tabs" id="shopTabs"></div>
           <div id="shopContent"></div>
@@ -142,15 +159,12 @@ function renderHeader(data, defaults) {
   document.getElementById("title").textContent = data.title || "";
   document.getElementById("subtitle").textContent = data.subtitle || "";
   document.getElementById("dates").textContent = data.dates || "";
-  document.getElementById("travelers").textContent = `${data.travelers || 0} 人`;
+  document.getElementById("travelers").textContent = `${data.travelers || 0}`;
   document.getElementById("budgetPerPerson").textContent =
-    `${formatMoney(data.budget_per_person || 0, defaults.currency, defaults.locale)} / 人`;
+    data.budget_per_person !== undefined
+      ? `${formatMoney(data.budget_per_person || 0, defaults.currency, defaults.locale)} / 1`
+      : "";
   document.getElementById("nights").textContent = data.nights || "";
-
-  document.getElementById("dayTabsName").textContent = data.day_tabs_name || "每日行程";
-  document.getElementById("stayTabsName").textContent = data.stay_tabs_name || "住宿資訊卡";
-  document.getElementById("shopTabsName").textContent = data.shop_tabs_name || "店家 / 活動 / 交通資訊卡";
-  document.getElementById("budgetTabsName").textContent = data.budget_tabs_name || "預算";
 }
 
 function renderReminders(data) {
@@ -174,19 +188,19 @@ function renderDaySection(data, defaults) {
   const days = Array.isArray(data.days) ? data.days : [];
   dayTabs.innerHTML = "";
 
-  let activeKey = days[0]?.key || "";
+  let activeKey = days[0]?.key ?? "";
 
   days.forEach((day, index) => {
     const btn = document.createElement("button");
     btn.className = "tab-btn" + (day.key === activeKey ? " active" : "");
-    btn.textContent = day.label || `Day ${index + 1}`;
-    btn.dataset.key = day.key;
+    btn.textContent = dayLabel(day, index);
+    btn.dataset.key = String(day.key);
     btn.onclick = () => {
       activeKey = day.key;
       renderDayContent(days, activeKey, defaults);
       attachPhotoSliders();
       detectImageOrientation();
-      syncActiveTab(dayTabs, activeKey);
+      syncActiveTab(dayTabs, String(activeKey));
     };
     dayTabs.appendChild(btn);
   });
@@ -194,7 +208,7 @@ function renderDaySection(data, defaults) {
   renderDayContent(days, activeKey, defaults);
   attachPhotoSliders();
   detectImageOrientation();
-  syncActiveTab(dayTabs, activeKey);
+  syncActiveTab(dayTabs, String(activeKey));
 }
 
 function renderDayContent(days, activeKey, defaults) {
@@ -203,20 +217,21 @@ function renderDayContent(days, activeKey, defaults) {
 
   const day = days.find((d) => d.key === activeKey) || days[0];
   if (!day) {
-    dayContent.innerHTML = `<div class="item-card">沒有行程資料</div>`;
+    dayContent.innerHTML = `<div class="item-card">${escapeHtml(t("noData"))}</div>`;
     return;
   }
 
+  const currentIndex = days.findIndex((d) => d.key === day.key);
   const stopsHtml = (day.stops || [])
     .map((stop, idx) => renderStopCard(day, stop, idx, defaults))
     .join("");
 
   dayContent.innerHTML = `
     <div class="day-header">
-      <div class="small muted">${escapeHtml(day.label || "")}</div>
-      <div class="day-header-title">${escapeHtml(day.title || "")}</div>
+      <div class="small muted">${escapeHtml(dayLabel(day, currentIndex))}</div>
+      ${nonEmpty(day.title) ? `<div class="day-header-title">${escapeHtml(day.title)}</div>` : ""}
       ${nonEmpty(day.theme) ? `<div class="day-header-theme muted">${escapeHtml(day.theme)}</div>` : ""}
-      ${nonEmpty(day.hero) ? `<div class="day-header-hero"><span class="badge">重點：${escapeHtml(day.hero)}</span></div>` : ""}
+      ${nonEmpty(day.hero) ? `<div class="day-header-hero"><span class="badge">${escapeHtml(t("highlight"))}：${escapeHtml(day.hero)}</span></div>` : ""}
     </div>
     <div class="stops">${stopsHtml}</div>
   `;
@@ -235,51 +250,43 @@ function renderStopCard(day, stop, idx, defaults) {
   const priceText = resolveStopPriceText(stop, defaults);
   const photosHtml = renderPhotos(stop.photos);
 
-  const title = stop.name || stop.maps_label || `行程點 ${idx + 1}`;
-  const address = stop.address?.trim() || "";
+  const title = stop.name || stop.maps_label || `Stop ${idx + 1}`;
+  const address = stop.address?.full?.trim() || stop.address?.short?.trim() || "";
   const note = stop.note?.trim() || "";
+  const hasMap = nonEmpty(stop.map);
 
   const metaParts = [
     timeText ? `<span class="time-pill">${escapeHtml(timeText)}</span>` : "",
-    durationText ? `<span class="pill">停留 ${escapeHtml(durationText)}</span>` : "",
+    durationText ? `<span class="pill">${escapeHtml(t("duration"))} ${escapeHtml(durationText)}</span>` : "",
     nonEmpty(stop.type) ? `<span class="pill">${escapeHtml(stop.type)}</span>` : "",
-    transitText ? `<span class="pill">移動 ${escapeHtml(transitText)}</span>` : "",
+    transitText ? `<span class="pill">${escapeHtml(t("transit"))} ${escapeHtml(transitText)}</span>` : "",
   ].filter(Boolean).join("");
 
   const extras = renderExtraRows(
     extraFields(stop, [
       "id",
-      "time",
       "start_time",
-      "end_time",
       "duration_min",
       "transit_to_next_min",
       "name",
       "maps_label",
-      "short_address",
       "type",
-      "stay",
-      "cost",
       "price",
       "address",
       "note",
-      "next",
-      "next_label",
-      "next_stop_id",
       "map",
       "highlight",
       "photos",
       "show_in_map_info",
     ])
   );
-
   return `
     <div class="stop${mapTarget ? " map-target" : ""}"${mapTarget ? ` data-mapid="${escapeHtml(mapId)}"` : ""}>
       <div class="stop-top">
         <div>
           <div class="stop-title">
             ${escapeHtml(title)}
-            ${stop.highlight ? ' <span class="badge">重點</span>' : ""}
+            ${stop.highlight ? ` <span class="badge">${escapeHtml(t("highlight"))}</span>` : ""}
           </div>
           ${metaParts ? `<div class="stop-meta">${metaParts}</div>` : ""}
         </div>
@@ -289,7 +296,7 @@ function renderStopCard(day, stop, idx, defaults) {
       ${address ? `
         <div class="addr-box">
           <div class="box">
-            <div class="small muted">地址</div>
+            <div class="small muted">Address</div>
             <div>${escapeHtml(address)}</div>
           </div>
         </div>
@@ -299,7 +306,7 @@ function renderStopCard(day, stop, idx, defaults) {
       ${photosHtml}
       ${extras}
 
-      ${mapTarget ? `
+      ${hasMap ? `
         <div class="actions">
           ${buildMapButton(mapId)}
         </div>
@@ -317,14 +324,14 @@ function renderBudgetSection(data, defaults) {
   const grandTotal = items.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
   budgetTabs.innerHTML = "";
-  let activeKey = "總額";
+  let activeKey = "total";
 
   const totalBtn = document.createElement("button");
   totalBtn.className = "tab-btn active";
-  totalBtn.textContent = "總額";
-  totalBtn.dataset.key = "總額";
+  totalBtn.textContent = "Total";
+  totalBtn.dataset.key = "total";
   totalBtn.onclick = () => {
-    activeKey = "總額";
+    activeKey = "total";
     renderBudgetContent(items, activeKey, grandTotal, defaults);
     syncActiveTab(budgetTabs, activeKey);
   };
@@ -333,10 +340,10 @@ function renderBudgetSection(data, defaults) {
   items.forEach((item, index) => {
     const btn = document.createElement("button");
     btn.className = "tab-btn";
-    btn.textContent = item.label || `分類 ${index + 1}`;
-    btn.dataset.key = item.label;
+    btn.textContent = item.label || `Category ${index + 1}`;
+    btn.dataset.key = item.label || `category-${index + 1}`;
     btn.onclick = () => {
-      activeKey = item.label;
+      activeKey = btn.dataset.key;
       renderBudgetContent(items, activeKey, grandTotal, defaults);
       syncActiveTab(budgetTabs, activeKey);
     };
@@ -351,11 +358,11 @@ function renderBudgetContent(items, activeKey, grandTotal, defaults) {
   const budgetContent = document.getElementById("budgetContent");
   if (!budgetContent) return;
 
-  if (activeKey === "總額") {
+  if (activeKey === "total") {
     budgetContent.innerHTML = `
       <div class="item-card">
         <div class="budget-summary-row">
-          <strong>總額</strong>
+          <strong>Total</strong>
           <span class="badge">${formatMoney(grandTotal, defaults.currency, defaults.locale)}</span>
         </div>
         <div class="details-wrap">
@@ -371,7 +378,7 @@ function renderBudgetContent(items, activeKey, grandTotal, defaults) {
             .join("")}
         </div>
         <div class="summary-box">
-          <div class="summary-box-label small">全部分類加總</div>
+          <div class="summary-box-label small">All categories</div>
           <div class="summary-box-value">${formatMoney(grandTotal, defaults.currency, defaults.locale)}</div>
         </div>
       </div>
@@ -379,9 +386,11 @@ function renderBudgetContent(items, activeKey, grandTotal, defaults) {
     return;
   }
 
-  const item = items.find((b) => b.label === activeKey) || items[0];
+  const item =
+    items.find((b, index) => (b.label || `category-${index + 1}`) === activeKey) || items[0];
+
   if (!item) {
-    budgetContent.innerHTML = `<div class="item-card">沒有預算資料</div>`;
+    budgetContent.innerHTML = `<div class="item-card">${escapeHtml(t("noData"))}</div>`;
     return;
   }
 
@@ -396,7 +405,7 @@ function renderBudgetContent(items, activeKey, grandTotal, defaults) {
         <span class="badge">${formatMoney(item.value || 0, defaults.currency, defaults.locale)}</span>
       </div>
       <div class="budget-bar budget-bar-top-gap"><div style="width:${pct}%"></div></div>
-      <div class="budget-percent small muted">分類占比：${pct}%</div>
+      <div class="budget-percent small muted">Share: ${pct}%</div>
       ${
         details.length
           ? `
@@ -406,7 +415,7 @@ function renderBudgetContent(items, activeKey, grandTotal, defaults) {
                   (d) => `
                     <div class="details-row">
                       <div>
-                        <strong>${escapeHtml(d.name || "項目")}</strong>
+                        <strong>${escapeHtml(d.name || "Item")}</strong>
                         ${nonEmpty(d.note) ? `<div class="small muted detail-note">${escapeHtml(d.note)}</div>` : ""}
                       </div>
                       <div>${formatMoney(d.amount || 0, defaults.currency, defaults.locale)}</div>
@@ -416,11 +425,11 @@ function renderBudgetContent(items, activeKey, grandTotal, defaults) {
                 .join("")}
             </div>
             <div class="summary-box">
-              <div class="summary-box-label small">明細加總</div>
+              <div class="summary-box-label small">Details total</div>
               <div class="summary-box-value">${formatMoney(detailsSum, defaults.currency, defaults.locale)}</div>
             </div>
           `
-          : `<div class="small muted budget-empty-note">尚未提供明細</div>`
+          : `<div class="small muted budget-empty-note">${escapeHtml(t("noData"))}</div>`
       }
     </div>
   `;
@@ -437,7 +446,7 @@ function renderStaySection(stayGroups) {
   stayGroups.forEach((group, index) => {
     const btn = document.createElement("button");
     btn.className = "tab-btn" + (group.key === activeKey ? " active" : "");
-    btn.textContent = group.label || `群組 ${index + 1}`;
+    btn.textContent = group.label || `Stay ${index + 1}`;
     btn.dataset.key = group.key;
     btn.onclick = () => {
       activeKey = group.key;
@@ -461,7 +470,7 @@ function renderStayContent(stayGroups, activeKey) {
 
   const group = stayGroups.find((g) => g.key === activeKey) || stayGroups[0];
   if (!group) {
-    stayContent.innerHTML = `<div class="item-card">沒有住宿資料</div>`;
+    stayContent.innerHTML = `<div class="item-card">${escapeHtml(t("noData"))}</div>`;
     return;
   }
 
@@ -478,6 +487,8 @@ function renderStayCard(group, item, idx) {
   const mapTarget = makeMapTarget(item);
   const mapId = `stay-${group.key || "stay"}-${idx}`;
   const photosHtml = renderPhotos(item.photos);
+  const address = item.address?.trim() || "";
+  const hasMap = nonEmpty(item.map);
 
   const extras = renderExtraRows(
     extraFields(item, ["area", "name", "note", "link", "map", "address", "photos", "show_in_map_info"])
@@ -490,13 +501,13 @@ function renderStayCard(group, item, idx) {
         <span class="badge">${escapeHtml(item.area || group.label || "")}</span>
       </div>
       ${nonEmpty(item.note) ? `<div class="muted small item-card-note">${escapeHtml(item.note)}</div>` : ""}
-      ${nonEmpty(item.address) ? `<div class="extra-row item-card-address"><strong>地址：</strong>${escapeHtml(item.address)}</div>` : ""}
+      ${address ? `<div class="extra-row item-card-address"><strong>Address：</strong>${escapeHtml(address)}</div>` : ""}
       ${photosHtml}
       ${extras}
       <div class="actions">
-        ${buildMapButton(mapTarget ? mapId : "")}
+        ${hasMap ? buildMapButton(mapId) : ""}
         ${nonEmpty(item.link)
-          ? `<a class="btn secondary" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">查看住宿</a>`
+          ? `<a class="btn secondary" href="${escapeHtml(item.link)}" target="_blank">Open</a>`
           : ""}
       </div>
     </div>
@@ -514,7 +525,7 @@ function renderShopSection(shopGroups, defaults) {
   shopGroups.forEach((group, index) => {
     const btn = document.createElement("button");
     btn.className = "tab-btn" + (group.key === activeKey ? " active" : "");
-    btn.textContent = group.label || `分類 ${index + 1}`;
+    btn.textContent = group.label || `Info ${index + 1}`;
     btn.dataset.key = group.key;
     btn.onclick = () => {
       activeKey = group.key;
@@ -538,7 +549,7 @@ function renderShopContent(shopGroups, activeKey, defaults) {
 
   const group = shopGroups.find((g) => g.key === activeKey) || shopGroups[0];
   if (!group) {
-    shopContent.innerHTML = `<div class="item-card">沒有店家 / 活動資料</div>`;
+    shopContent.innerHTML = `<div class="item-card">${escapeHtml(t("noData"))}</div>`;
     return;
   }
 
@@ -557,6 +568,8 @@ function renderShopCard(group, item, idx, defaults) {
   const itemPrice = resolveShopPriceText(item, defaults);
   const itemPriceOptions = resolveShopPriceOptionsText(item, defaults);
   const photosHtml = renderPhotos(item.photos);
+  const address = item.address?.trim() || "";
+  const hasMap = nonEmpty(item.map);
 
   const extras = renderExtraRows(
     extraFields(item, ["name", "tag", "price", "price_options", "note", "link", "map", "address", "photos", "show_in_map_info"])
@@ -566,18 +579,18 @@ function renderShopCard(group, item, idx, defaults) {
     <div class="item-card${mapTarget ? " map-target" : ""}"${mapTarget ? ` data-mapid="${escapeHtml(mapId)}"` : ""}>
       <div class="item-card-top">
         <strong>${escapeHtml(item.name || "")}</strong>
-        <span class="badge">${escapeHtml(item.tag || group.label || "資訊")}</span>
+        <span class="badge">${escapeHtml(item.tag || group.label || "Info")}</span>
       </div>
       ${itemPrice ? `<div class="item-price">${escapeHtml(itemPrice)}</div>` : ""}
       ${itemPriceOptions ? `<div class="muted small item-price-options">${escapeHtml(itemPriceOptions)}</div>` : ""}
       ${nonEmpty(item.note) ? `<div class="muted small item-card-note">${escapeHtml(item.note)}</div>` : ""}
-      ${nonEmpty(item.address) ? `<div class="extra-row item-card-address"><strong>地址：</strong>${escapeHtml(item.address)}</div>` : ""}
+      ${address ? `<div class="extra-row item-card-address"><strong>Address：</strong>${escapeHtml(address)}</div>` : ""}
       ${photosHtml}
       ${extras}
       <div class="actions">
-        ${buildMapButton(mapTarget ? mapId : "")}
+        ${hasMap ? buildMapButton(mapId) : ""}
         ${nonEmpty(item.link)
-          ? `<a class="btn secondary" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">查看連結</a>`
+          ? `<a class="btn secondary" href="${escapeHtml(item.link)}" target="_blank">Open</a>`
           : ""}
       </div>
     </div>
@@ -622,10 +635,10 @@ function collectLocations(data, stayGroups, shopGroups, defaults) {
       locations.push({
         id: `day-${day.key || dayIndex}-${stopIndex}`,
         map,
-        source: `${data.day_tabs_name || "每日行程"} / ${day.label || `Day ${dayIndex + 1}`}`,
-        title: stop.maps_label || stop.name || "地點",
+        source: `${t("itinerary")} / ${dayLabel(day, dayIndex)}`,
+        title: stop.maps_label || stop.name || "Place",
         subtitle: [stop.type, timeText, priceText].filter(Boolean).join("｜"),
-        address: stop.short_address || stop.address || "",
+        address: stop.address?.short || stop.address?.full || "",
         order: seq++,
         showInMapInfo: shouldShowInMapInfo(stop),
       });
@@ -640,9 +653,9 @@ function collectLocations(data, stayGroups, shopGroups, defaults) {
       locations.push({
         id: `stay-${group.key || groupIndex}-${itemIndex}`,
         map,
-        source: `${document.getElementById("stayTabsName")?.textContent || "住宿資訊"} / ${group.label || "住宿"}`,
-        title: item.name || "住宿",
-        subtitle: item.note || item.reference || "",
+        source: `${t("stays")} / ${group.label || "Stay"}`,
+        title: item.name || "Stay",
+        subtitle: item.note || "",
         address: item.address || item.area || "",
         order: seq++,
         showInMapInfo: shouldShowInMapInfo(item),
@@ -661,8 +674,8 @@ function collectLocations(data, stayGroups, shopGroups, defaults) {
       locations.push({
         id: `shop-${group.key || groupIndex}-${itemIndex}`,
         map,
-        source: `${document.getElementById("shopTabsName")?.textContent || "資訊分類"} / ${group.label || "資訊"}`,
-        title: item.name || "店家",
+        source: `${t("shops")} / ${group.label || "Info"}`,
+        title: item.name || "Shop",
         subtitle: [item.tag, itemPrice, item.note].filter(Boolean).join("｜"),
         address: item.address || "",
         order: seq++,
@@ -699,9 +712,9 @@ function renderEmptyMapState() {
   const box = document.getElementById("locationList");
 
   if (box) box.innerHTML = "";
-  if (mapFrame) mapFrame.src = embedUrl("台灣");
+  if (mapFrame) mapFrame.src = embedUrl("Taiwan");
   if (mapFocus) {
-    mapFocus.innerHTML = `<div class="muted">目前沒有可顯示的 map / address 資料。</div>`;
+    mapFocus.innerHTML = `<div class="muted">${escapeHtml(t("noData"))}</div>`;
   }
 }
 
@@ -721,9 +734,9 @@ function focusMapById(mapId) {
       <div class="small muted">${escapeHtml(item.source)}</div>
       <h3>${escapeHtml(item.title)}</h3>
       ${nonEmpty(item.subtitle) ? `<div class="map-focus-subtitle muted">${escapeHtml(item.subtitle)}</div>` : ""}
-      ${nonEmpty(item.address) ? `<div class="map-focus-address"><strong>地址：</strong>${escapeHtml(item.address)}</div>` : ""}
+      ${nonEmpty(item.address) ? `<div class="map-focus-address"><strong>Address：</strong>${escapeHtml(item.address)}</div>` : ""}
       <div class="actions">
-        <a class="btn secondary" href="${escapeHtml(item.map)}" target="_blank" rel="noopener noreferrer">開啟 Google Maps</a>
+        <a class="btn secondary" href="${escapeHtml(item.map)}" target="_blank" rel="noopener noreferrer">Open Google Maps</a>
       </div>
     `;
   }
@@ -789,31 +802,40 @@ function attachPhotoSliders() {
 
 function detectImageOrientation() {
   document.querySelectorAll(".slide img").forEach((img) => {
-    img.onload = () => {
+    const apply = () => {
       const ratio = img.naturalWidth / img.naturalHeight;
-
+      img.classList.remove("portrait", "landscape");
       if (ratio < 1) {
         img.classList.add("portrait");
       } else {
         img.classList.add("landscape");
       }
     };
+
+    if (img.complete) {
+      apply();
+    } else {
+      img.onload = apply;
+    }
   });
 }
 
-function renderValidationError(errors) {
+function renderValidationError(errors, defaultLocale = "zh-TW") {
   const app = document.getElementById("app");
   if (!app) return;
+
+  const locale = resolveLocale(defaultLocale);
+  state.i18n = createI18n(locale);
 
   app.innerHTML = `
     <div class="wrap">
       <div class="card">
         <div class="section-head">
-          <h2>資料格式錯誤</h2>
+          <h2>${escapeHtml(t("dataError"))}</h2>
         </div>
         <div class="section-body">
           <div class="error-box">
-            <strong>trip.json 結構驗證失敗</strong><br>
+            <strong>trip.json validation failed</strong><br>
             ${errors.map((e) => `- ${escapeHtml(e)}`).join("<br>")}
           </div>
         </div>

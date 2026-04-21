@@ -1,65 +1,89 @@
 import { escapeHtml } from "./utils.js";
-import { buildTripUrl } from "./routes.js";
-
-function validateCatalogTrips(trips) {
-  trips.forEach(t => {
-    if (!t.slug) {
-      console.error("Trip missing slug:", t);
-    }
-  });
-}
-
-function renderTripGrid(trips) {
-  if (!Array.isArray(trips) || !trips.length) {
-    return `<div class="empty-box">目前沒有行程</div>`;
-  }
-
-  return `
-    <div class="trip-grid">
-      ${trips
-        .map(
-          (trip) => `
-            <a class="trip-card" href="${buildTripUrl(trip.slug)}">
-              <div class="trip-cover" style="background-image:url('${escapeHtml(trip.cover || trip.coverImage || "")}')"></div>
-              <div class="trip-body">
-                <div class="trip-card-top">
-                  <h3>${escapeHtml(trip.label || trip.title || trip.slug)}</h3>
-                  <div class="trip-meta">${trip.days || "-"} 天 / ${trip.nights || "-"} 晚</div>
-                </div>
-                <p>${escapeHtml(trip.summary || "")}</p>
-                <div class="trip-tags">
-                  ${(trip.tags || []).map((tag) => `<span class="trip-tag">${escapeHtml(tag)}</span>`).join("")}
-                </div>
-              </div>
-            </a>
-          `
-        )
-        .join("")}
-    </div>
-  `;
-}
+import { createI18n, resolveLocale } from "./i18n.js";
 
 export function renderHome(data) {
+  const locale = resolveLocale(data?.defaults?.locale || "zh-TW");
+  const i18n = createI18n(locale);
+
   const app = document.getElementById("app");
   if (!app) return;
-  
-  const trips = Array.isArray(data?.trips) ? data.trips : Array.isArray(data) ? data : [];
-  validateCatalogTrips(trips);
+
+  const trips = Array.isArray(data?.trips) ? data.trips : [];
 
   app.innerHTML = `
     <div class="catalog-wrap">
       <div class="catalog-hero">
-        <p class="catalog-kicker">Travel</p>
-        <h1>Travel Directory</h1>
-        <p class="catalog-subtitle">所有行程總覽</p>
+        <p class="catalog-kicker">${escapeHtml(safeT(i18n, "catalogKicker", "Travel"))}</p>
+        <h1>${escapeHtml(data?.title || safeT(i18n, "siteTitle", "TravelHub"))}</h1>
+        <p class="catalog-subtitle">
+          ${escapeHtml(data?.subtitle || safeT(i18n, "catalogSubtitle", "Travel notes"))}
+        </p>
       </div>
 
       <section class="catalog-section">
         <div class="catalog-section-head">
-          <h2>Trips</h2>
+          <h2>${escapeHtml(safeT(i18n, "trips", "Trips"))}</h2>
         </div>
-        ${renderTripGrid(trips)}
+
+        ${
+          trips.length
+            ? `<div class="trip-grid">${trips.map((trip) => renderTripCard(trip, i18n)).join("")}</div>`
+            : `<div class="empty-box">${escapeHtml(safeT(i18n, "noData", "No data"))}</div>`
+        }
       </section>
     </div>
+  `;
+}
+
+function safeT(i18n, key, fallback) {
+  const value = i18n?.t?.(key);
+  if (typeof value === "string" && value.trim()) return value;
+  return fallback;
+}
+
+function renderTripCard(trip, i18n) {
+  const slug = trip?.slug || "";
+  const href = `/trips/${encodeURIComponent(slug)}/`;
+
+  const title = trip?.title || slug || safeT(i18n, "untitledTrip", "Untitled Trip");
+  const summary = trip?.summary || "";
+  const coverImage = trip?.coverImage || "";
+  const days = Number.isFinite(Number(trip?.days)) ? Number(trip.days) : "";
+  const nights = Number.isFinite(Number(trip?.nights)) ? Number(trip.nights) : "";
+  const tags = Array.isArray(trip?.tags) ? trip.tags : [];
+
+  const dayUnit = safeT(i18n, "dayUnit", "days");
+  const nightUnit = safeT(i18n, "nightUnit", "nights");
+
+  const metaParts = [];
+  if (days !== "") metaParts.push(`${days} ${dayUnit}`);
+  if (nights !== "") metaParts.push(`${nights} ${nightUnit}`);
+
+  return `
+    <a class="trip-card" href="${href}">
+      <div
+        class="trip-cover"
+        ${coverImage ? `style="background-image:url('${escapeHtml(coverImage)}')"` : ""}
+      ></div>
+
+      <div class="trip-body">
+        <div class="trip-card-top">
+          <h3>${escapeHtml(title)}</h3>
+          ${metaParts.length ? `<div class="trip-meta">${escapeHtml(metaParts.join(" / "))}</div>` : ""}
+        </div>
+
+        ${summary ? `<p>${escapeHtml(summary)}</p>` : ""}
+
+        ${
+          tags.length
+            ? `
+              <div class="trip-tags">
+                ${tags.map((tag) => `<span class="trip-tag">${escapeHtml(tag)}</span>`).join("")}
+              </div>
+            `
+            : ""
+        }
+      </div>
+    </a>
   `;
 }

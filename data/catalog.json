@@ -1,22 +1,43 @@
 {
+  "defaults": {
+    "locale": "zh-TW"
+  },
+  "subtitle": "",
   "trips": [
     {
       "slug": "busan-5d4n-202604",
-      "title": "釜山 5天4夜",
-      "summary": "春季釜山自由行，整合櫻花、海景、南浦與每日行程。",
+      "title": "釜山櫻花 × 海景 × 購物 5日行程",
+      "summary": "春季釜山自由行",
       "coverImage": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260403_161316.jpg",
       "days": 5,
       "nights": 4,
-      "tags": ["釜山", "櫻花", "海景", "自由行"]
+      "tags": [
+        "釜山",
+        "櫻花",
+        "海景",
+        "自由行"
+      ],
+      "locale": "zh-TW",
+      "lastmod": "2026-04-20"
     },
     {
-      "slug": "xiaoliuqiu-3d2n-202605",
-      "title": "小琉球 3天2夜",
-      "summary": "浮潛、海龜、慢活海島行程。",
-      "coverImage": "",
-      "days": 3,
-      "nights": 2,
-      "tags": ["小琉球", "浮潛", "海島"]
+      "slug": "xiaoliuqiu-4d3n-202605",
+      "title": "小琉球 4天3夜",
+      "summary": "海島體驗行程，包含浮潛、水肺、SUP、東港黑鮪魚與大鵬灣散步。",
+      "coverImage": "https://itinerary.colatour.com.tw/COLA_AppFiles/A03A_Tour/PictureObj/00084843.JPG",
+      "days": 4,
+      "nights": 3,
+      "tags": [
+        "小琉球",
+        "東港",
+        "浮潛",
+        "水肺潛水",
+        "SUP",
+        "黑鮪魚",
+        "自由行"
+      ],
+      "locale": "zh-TW",
+      "lastmod": "2026-04-21"
     }
   ]
 }
