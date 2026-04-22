@@ -2,6 +2,7 @@ import { getRoute } from "./router.js";
 import { loadData } from "./data-loader.js";
 import { renderHome } from "./catalog-view.js";
 import { renderTripPage } from "./trip-view.js";
+import { renderDestinationPage } from "./destination-view.js";
 
 function renderNotFound() {
   const app = document.getElementById("app");
@@ -21,38 +22,32 @@ function renderNotFound() {
   `;
 }
 
-function resolveRouteFromPageContext() {
-  const pageType = document.body.dataset.pageType || "";
-  const tripSlug = document.body.dataset.tripSlug || "";
-
-  if (pageType === "trip" && tripSlug) {
-    return {
-      page: "trip",
-      tripSlug,
-    };
-  }
-
-  if (pageType === "home-static") {
-    return {
-      page: "home-static",
-    };
-  }
-
-  return getRoute();
-}
-
 async function bootstrap() {
   const app = document.getElementById("app");
   if (!app) return;
 
   try {
-    const route = resolveRouteFromPageContext();
+    const pageType = document.body.dataset.pageType || "";
+    const tripSlug = document.body.dataset.tripSlug || "";
+    const pageDataEl = document.getElementById("page-data");
 
-    // 已經是靜態首頁，不再重複 render
-    if (route.page === "home-static") {
+    if ((pageType === "destination" || pageType === "destination-seo") && pageDataEl) {
+      const data = JSON.parse(pageDataEl.textContent);
+      renderDestinationPage(data);
       return;
     }
 
+    if (pageType === "trip" && pageDataEl) {
+      const data = JSON.parse(pageDataEl.textContent);
+      renderTripPage(data);
+      return;
+    }
+
+    if (pageType === "home-static") {
+      return;
+    }
+
+    const route = getRoute();
     const data = await loadData(route);
 
     switch (route.page) {

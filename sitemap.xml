@@ -1,15 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://travel.omnixaas.com/</loc>
-    <lastmod>2026-04-21</lastmod>
+    <loc>https://foodnetravel.onmixaas.com/</loc>
   </url>
   <url>
-    <loc>https://travel.omnixaas.com/trips/busan-5d4n-202604/</loc>
-    <lastmod>2026-04-20</lastmod>
+    <loc>https://foodnetravel.onmixaas.com/trips/</loc>
   </url>
   <url>
-    <loc>https://travel.omnixaas.com/trips/xiaoliuqiu-4d3n-202605/</loc>
-    <lastmod>2026-04-21</lastmod>
+    <loc>https://foodnetravel.onmixaas.com/trips/busan-5d4n-202604/</loc>
+  </url>
+  <url>
+    <loc>https://foodnetravel.onmixaas.com/trips/busan-5d4n-202610/</loc>
+  </url>
+  <url>
+    <loc>https://foodnetravel.onmixaas.com/trips/xiaoliuqiu-4d3n-202605/</loc>
+  </url>
+  <url>
+    <loc>https://foodnetravel.onmixaas.com/destinations/kr/busan/</loc>
+  </url>
+  <url>
+    <loc>https://foodnetravel.onmixaas.com/destinations/kr/busan/restaurants/</loc>
+  </url>
+  <url>
+    <loc>https://foodnetravel.onmixaas.com/destinations/kr/busan/itinerary/</loc>
+  </url>
+  <url>
+    <loc>https://foodnetravel.onmixaas.com/destinations/kr/busan/budget/</loc>
+  </url>
+  <url>
+    <loc>https://foodnetravel.onmixaas.com/destinations/kr/busan/season-spring/</loc>
+  </url>
+  <url>
+    <loc>https://foodnetravel.onmixaas.com/destinations/kr/busan/season-autumn/</loc>
   </url>
 </urlset>

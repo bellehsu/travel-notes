@@ -1,7 +1,7 @@
 const dictionaries = {
   "zh-TW": {
     /* global */
-    siteTitle: "TravelHub",
+    siteTitle: "FoodneTravel",
     noData: "沒有資料",
     untitledTrip: "未命名行程",
     open: "查看",
@@ -49,7 +49,7 @@ const dictionaries = {
 
   en: {
     /* global */
-    siteTitle: "TravelHub",
+    siteTitle: "FoodneTravel",
     noData: "No data",
     untitledTrip: "Untitled Trip",
     open: "Open",

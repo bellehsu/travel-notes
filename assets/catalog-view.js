@@ -14,7 +14,7 @@ export function renderHome(data) {
     <div class="catalog-wrap">
       <div class="catalog-hero">
         <p class="catalog-kicker">${escapeHtml(safeT(i18n, "catalogKicker", "Travel"))}</p>
-        <h1>${escapeHtml(data?.title || safeT(i18n, "siteTitle", "TravelHub"))}</h1>
+        <h1>${escapeHtml(data?.title || safeT(i18n, "siteTitle", "FoodneTravel"))}</h1>
         <p class="catalog-subtitle">
           ${escapeHtml(data?.subtitle || safeT(i18n, "catalogSubtitle", "Travel notes"))}
         </p>

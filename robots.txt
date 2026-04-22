@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://travel.omnixaas.com/sitemap.xml
+Sitemap: https://foodnetravel.onmixaas.com/sitemap.xml

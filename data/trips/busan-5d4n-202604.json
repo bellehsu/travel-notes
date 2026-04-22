@@ -3,6 +3,9 @@
   "subtitle": "5天4夜｜櫻花 × 海雲臺 × 南浦 × 體驗行程｜釜山 4 晚",
   "summary": "春季釜山自由行",
   "coverImage": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260403_161316.jpg",
+  "destinationSlugs": ["busan"],
+  "countryCode": "kr",
+  "seasonTags": ["spring"],
   "tags": [
     "釜山",
     "櫻花",

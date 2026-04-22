@@ -1,0 +1,237 @@
+{
+  "countryCode": "kr",
+  "destinationSlugs": ["busan"],
+  "seasonTags": ["autumn"],
+  "tags": ["food", "shopping", "autumn", "busan"],
+  "title": "釜山美食 × 購物 5日行程",
+  "subtitle": "5天4夜｜海景散步 × 市區購物 × 餐廳安排",
+  "summary": "適合秋季安排的釜山自由行版本，重點放在吃、逛與比較舒服的城市節奏。",
+  "coverImage": "",
+  "lastmod": "2026-10-01",
+  "defaults": {
+    "currency": "KRW",
+    "locale": "zh-TW",
+    "price_unit": "per_person"
+  },
+  "dates": "秋季",
+  "travelers": 2,
+  "budget_per_person": 950000,
+  "nights": "釜山 4 晚",
+  "budget_items": [
+    {
+      "label": "交通",
+      "value": 120000,
+      "details": [
+        { "name": "機場往返", "amount": 25000, "note": "單人估算" },
+        { "name": "市區移動", "amount": 45000, "note": "地鐵 / 公車 / 計程車" },
+        { "name": "跨區移動預留", "amount": 50000, "note": "彈性預留" }
+      ]
+    },
+    {
+      "label": "住宿",
+      "value": 520000,
+      "details": [
+        { "name": "4 晚住宿", "amount": 520000, "note": "中等預算區間" }
+      ]
+    },
+    {
+      "label": "餐飲",
+      "value": 180000,
+      "details": [
+        { "name": "正餐", "amount": 130000, "note": "以每日 2 餐為主" },
+        { "name": "咖啡 / 點心", "amount": 50000, "note": "保留彈性" }
+      ]
+    },
+    {
+      "label": "購物",
+      "value": 80000,
+      "details": [
+        { "name": "藥妝 / 雜貨", "amount": 50000, "note": "基本購物" },
+        { "name": "伴手禮", "amount": 30000, "note": "彈性" }
+      ]
+    },
+    {
+      "label": "其他",
+      "value": 50000,
+      "details": [
+        { "name": "預留金", "amount": 50000, "note": "臨時支出" }
+      ]
+    }
+  ],
+  "stays": [
+    {
+      "area": "海雲台",
+      "name": "海雲台住宿區",
+      "note": "適合把散步、早餐與晚餐都排在附近",
+      "link": ""
+    }
+  ],
+  "shops": [
+    {
+      "tag": "餐廳",
+      "name": "豬肉湯飯",
+      "price": { "kind": "range", "min": 10000, "max": 18000 },
+      "note": "適合早餐或晚餐"
+    },
+    {
+      "tag": "餐廳",
+      "name": "烤肉",
+      "price": { "kind": "range", "min": 18000, "max": 35000 },
+      "note": "適合排在購物後的晚餐"
+    },
+    {
+      "tag": "餐廳",
+      "name": "海鮮餐",
+      "price": { "kind": "range", "min": 25000, "max": 50000 },
+      "note": "適合搭配海邊散步或半日行程"
+    },
+    {
+      "tag": "購物",
+      "name": "百貨 / 商圈",
+      "price": { "kind": "range", "min": 0, "max": 200000 },
+      "note": "可安排半天到一天"
+    }
+  ],
+  "days": [
+    {
+      "key": 1,
+      "title": "抵達釜山｜海雲台散步 × 輕鬆吃",
+      "theme": "先進入節奏",
+      "hero": "海邊散步",
+      "stops": [
+        {
+          "name": "抵達釜山",
+          "type": "交通",
+          "start_time": "10:00",
+          "duration_min": 90,
+          "price": { "kind": "fixed", "amount": 12000 },
+          "note": "進市區與入住前移動"
+        },
+        {
+          "name": "海雲台散步",
+          "type": "景點",
+          "start_time": "14:00",
+          "duration_min": 90,
+          "price": { "kind": "free", "amount": 0 },
+          "note": "第一天不要排太滿，先熟悉環境"
+        },
+        {
+          "name": "海雲台晚餐",
+          "type": "餐飲",
+          "start_time": "18:30",
+          "duration_min": 90,
+          "price": { "kind": "range", "min": 15000, "max": 30000 },
+          "note": "靠近住宿區，第一天走輕鬆版"
+        }
+      ]
+    },
+    {
+      "key": 2,
+      "title": "市區購物 × 晚餐安排",
+      "theme": "吃與逛放在一起",
+      "hero": "購物",
+      "stops": [
+        {
+          "name": "商圈逛街",
+          "type": "購物",
+          "start_time": "11:00",
+          "duration_min": 180,
+          "price": { "kind": "range", "min": 0, "max": 120000 },
+          "note": "白天以購物為主"
+        },
+        {
+          "name": "購物區晚餐",
+          "type": "餐飲",
+          "start_time": "18:30",
+          "duration_min": 90,
+          "price": { "kind": "range", "min": 18000, "max": 35000 },
+          "note": "晚餐直接排在逛街區附近"
+        }
+      ]
+    },
+    {
+      "key": 3,
+      "title": "海景路線 × 慢節奏午餐",
+      "theme": "秋季舒服走法",
+      "hero": "散步與看海",
+      "stops": [
+        {
+          "name": "海邊散步路線",
+          "type": "景點",
+          "start_time": "10:30",
+          "duration_min": 120,
+          "price": { "kind": "free", "amount": 0 },
+          "note": "適合秋季安排較長的步行"
+        },
+        {
+          "name": "海景午餐",
+          "type": "餐飲",
+          "start_time": "13:00",
+          "duration_min": 90,
+          "price": { "kind": "range", "min": 20000, "max": 40000 },
+          "note": "和海邊行程放在一起比較順"
+        }
+      ]
+    },
+    {
+      "key": 4,
+      "title": "咖啡 × 購物補強 × 晚上自由安排",
+      "theme": "留一點彈性",
+      "hero": "自由活動",
+      "stops": [
+        {
+          "name": "咖啡館",
+          "type": "餐飲",
+          "start_time": "11:00",
+          "duration_min": 60,
+          "price": { "kind": "range", "min": 5000, "max": 12000 },
+          "note": "中段行程放慢一點"
+        },
+        {
+          "name": "補貨購物",
+          "type": "購物",
+          "start_time": "14:00",
+          "duration_min": 180,
+          "price": { "kind": "range", "min": 0, "max": 100000 },
+          "note": "把還沒買完的東西補齊"
+        },
+        {
+          "name": "晚餐",
+          "type": "餐飲",
+          "start_time": "19:00",
+          "duration_min": 90,
+          "price": { "kind": "range", "min": 15000, "max": 30000 },
+          "note": "依體力彈性安排"
+        }
+      ]
+    },
+    {
+      "key": 5,
+      "title": "最後採買 × 回程",
+      "theme": "收尾",
+      "hero": "簡單收尾",
+      "stops": [
+        {
+          "name": "最後採買",
+          "type": "購物",
+          "start_time": "11:00",
+          "duration_min": 120,
+          "price": { "kind": "range", "min": 0, "max": 80000 },
+          "note": "保留最後補貨時間"
+        },
+        {
+          "name": "回程移動",
+          "type": "交通",
+          "start_time": "16:00",
+          "duration_min": 90,
+          "price": { "kind": "fixed", "amount": 12000 },
+          "note": "前往機場"
+        }
+      ]
+    }
+  ],
+  "reminders": [
+    "秋季很適合走比較多，但每天還是保留一點彈性會更舒服。",
+    "購物和餐廳盡量排在同一區，整體體感會好很多。"
+  ]
+}

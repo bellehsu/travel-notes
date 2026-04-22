@@ -2,23 +2,22 @@
   "defaults": {
     "locale": "zh-TW"
   },
-  "subtitle": "",
+  "title": "FoodneTravel",
+  "subtitle": "Travel planning with food, itinerary and tools",
   "trips": [
     {
-      "slug": "busan-5d4n-202604",
-      "title": "釜山櫻花 × 海景 × 購物 5日行程",
-      "summary": "春季釜山自由行",
-      "coverImage": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260403_161316.jpg",
+      "slug": "busan-5d4n-202610",
+      "title": "釜山美食 × 購物 5日行程",
+      "summary": "適合秋季安排的釜山自由行版本，重點放在吃、逛與比較舒服的城市節奏。",
+      "coverImage": "",
       "days": 5,
       "nights": 4,
       "tags": [
-        "釜山",
-        "櫻花",
-        "海景",
-        "自由行"
-      ],
-      "locale": "zh-TW",
-      "lastmod": "2026-04-20"
+        "food",
+        "shopping",
+        "autumn",
+        "busan"
+      ]
     },
     {
       "slug": "xiaoliuqiu-4d3n-202605",
@@ -35,9 +34,21 @@
         "SUP",
         "黑鮪魚",
         "自由行"
-      ],
-      "locale": "zh-TW",
-      "lastmod": "2026-04-21"
+      ]
+    },
+    {
+      "slug": "busan-5d4n-202604",
+      "title": "釜山櫻花 × 海景 × 購物 5日行程",
+      "summary": "春季釜山自由行",
+      "coverImage": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260403_161316.jpg",
+      "days": 5,
+      "nights": 4,
+      "tags": [
+        "釜山",
+        "櫻花",
+        "海景",
+        "自由行"
+      ]
     }
   ]
 }

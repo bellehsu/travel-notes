@@ -1,5 +1,6 @@
 {
-  "name": "travelhub-static",
+  "name": "foodnettravel-static",
+  "type": "module",
   "private": true,
   "scripts": {
     "build:pages": "node scripts/generate-pages.js",

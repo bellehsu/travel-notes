@@ -1,0 +1,141 @@
+{
+  "type": "destination-seo",
+  "pageKind": "budget",
+  "countryCode": "kr",
+  "slug": "budget",
+  "hero": {
+    "title": "釜山預算整理",
+    "subtitle": "先抓大方向，再決定這趟要花到哪裡"
+  },
+  "seo": {
+    "title": "釜山預算整理｜住宿、交通、餐飲與活動花費",
+    "description": "整理 釜山 trip 中已出現的預算結構，讓你先抓出住宿、交通、餐飲與活動的大致分布。",
+    "keywords": [
+      "釜山預算",
+      "釜山花費",
+      "釜山自由行預算"
+    ]
+  },
+  "intro": "排 釜山 行程時，預算通常不是要抓到每一筆都完全準，而是先知道哪幾塊最容易拉高總花費。這頁會先把目前 trip 裡已經出現的預算分類整理出來，讓你快速判斷住宿、交通、餐飲和活動大概怎麼分配。等你決定了旅行版本，再回到單一 trip page 看更細的明細就好。",
+  "highlights": [
+    "先看花費結構，不用一開始就算得很細",
+    "預算資料直接來自現有 trip JSON",
+    "適合拿來比較不同版本 trip 的支出方向"
+  ],
+  "sections": [
+    {
+      "id": "budget-thinking",
+      "title": "釜山預算怎麼抓比較實際",
+      "summary": "規劃前期先看大結構，比死算每一筆更有用。",
+      "bullets": [
+        "住宿通常最先決定整體預算區間",
+        "活動與票券會影響每天的花費密度",
+        "餐飲不一定最貴，但很容易因為次數多而累積",
+        "交通如果跨區太多，支出也會慢慢拉高"
+      ]
+    },
+    {
+      "id": "budget-structure",
+      "title": "釜山目前常見的預算結構",
+      "summary": "以下是目前 trip 裡已經出現的預算分類，適合先拿來做大方向判斷。",
+      "bullets": [
+        "住宿｜2,520,000",
+        "餐飲｜520,000",
+        "其他｜165,000",
+        "交通｜130,000",
+        "購物｜80,000",
+        "活動｜75,000"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "釜山預算頁的數字是固定報價嗎？",
+      "a": "不是，這頁主要整理目前 trip JSON 裡已經輸入的花費結構，適合當估算與比較基礎。"
+    },
+    {
+      "q": "如果我想看更細的花費，應該看哪裡？",
+      "a": "建議直接進單一 trip page，看該版本拆出的住宿、交通、餐飲與活動明細。"
+    }
+  ],
+  "internalLinks": [
+    {
+      "label": "回到釜山目的地首頁",
+      "url": "/destinations/kr/undefined/"
+    },
+    {
+      "label": "查看釜山行程整理",
+      "url": "/destinations/kr/undefined/itinerary/"
+    }
+  ],
+  "cta": {
+    "title": "先抓方向，不用先算到太細",
+    "body": "先把總體預算區間抓出來，再進完整 trip page 看每日安排與花費，通常會更好下決定。",
+    "primaryLabel": "查看完整行程",
+    "primaryUrl": "/trips/busan-5d4n-202610/"
+  },
+  "featuredTrips": [
+    {
+      "tripSlug": "busan-5d4n-202610",
+      "title": "釜山美食 × 購物 5日行程",
+      "summary": "適合秋季安排的釜山自由行版本，重點放在吃、逛與比較舒服的城市節奏。",
+      "days": 5,
+      "nights": 4,
+      "seasonTags": [
+        "autumn"
+      ],
+      "tags": [
+        "food",
+        "shopping",
+        "autumn",
+        "busan"
+      ],
+      "coverImage": "",
+      "url": "/trips/busan-5d4n-202610/"
+    },
+    {
+      "tripSlug": "busan-5d4n-202604",
+      "title": "釜山櫻花 × 海景 × 購物 5日行程",
+      "summary": "春季釜山自由行",
+      "days": 5,
+      "nights": 4,
+      "seasonTags": [
+        "spring"
+      ],
+      "tags": [
+        "釜山",
+        "櫻花",
+        "海景",
+        "自由行"
+      ],
+      "coverImage": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260403_161316.jpg",
+      "url": "/trips/busan-5d4n-202604/"
+    }
+  ],
+  "featuredPages": [
+    {
+      "pageSlug": "restaurants",
+      "title": "釜山餐廳推薦",
+      "summary": "從旅遊動線出發，整理比較好安排的用餐方向。",
+      "url": "/destinations/kr/busan/restaurants/"
+    },
+    {
+      "pageSlug": "itinerary",
+      "title": "釜山行程整理",
+      "summary": "先看不同版本怎麼玩，再決定要跟哪一份 trip。",
+      "url": "/destinations/kr/busan/itinerary/"
+    },
+    {
+      "pageSlug": "season-autumn",
+      "title": "秋季釜山",
+      "summary": "從季節出發，看這段時間適合怎麼安排。",
+      "url": "/destinations/kr/busan/season-autumn/"
+    },
+    {
+      "pageSlug": "season-spring",
+      "title": "春季釜山",
+      "summary": "從季節出發，看這段時間適合怎麼安排。",
+      "url": "/destinations/kr/busan/season-spring/"
+    }
+  ]
+}
