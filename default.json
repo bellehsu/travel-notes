@@ -1,0 +1,132 @@
+
+{
+  "title": "大阪京都旅行",
+  "subtitle": "測試版行程",
+  "dates": "2026/06/01 - 2026/06/05",
+  "travelers": 4,
+  "budget_per_person": 30000,
+  "nights": "京都2晚｜大阪2晚",
+
+  "stay_tabs_name": "住宿",
+  "shop_tabs_name": "資訊分類",
+  "budget_tabs_name": "預算",
+  "day_tabs_name": "每日行程",
+
+  "budget_items": [
+    {
+      "label": "交通",
+      "value": 5000,
+      "details": [
+        {
+          "name": "機票",
+          "amount": 4000,
+          "note": "廉航"
+        },
+        {
+          "name": "地鐵",
+          "amount": 1000,
+          "note": "ICOCA"
+        }
+      ]
+    }
+  ],
+
+  "reminders": [
+    "護照記得帶",
+    "記得買網卡"
+  ],
+
+  "stay_groups": [
+    {
+      "key": "kyoto",
+      "label": "京都住宿",
+      "items": [
+        {
+          "area": "京都站",
+          "name": "Hotel Kyoto",
+          "note": "靠近車站",
+          "address": "Kyoto Station",
+          "map": "https://maps.google.com/?q=Kyoto+Station",
+          "lat": 34.9855,
+          "lng": 135.7586
+        }
+      ]
+    }
+  ],
+
+  "shop_groups": [
+    {
+      "key": "food",
+      "label": "美食",
+      "items": [
+        {
+          "name": "一蘭拉麵",
+          "tag": "拉麵",
+          "price": "1000円",
+          "note": "觀光客很多",
+          "address": "大阪",
+          "map": "https://maps.google.com/?q=Ichiran+Osaka",
+          "lat": 34.6687,
+          "lng": 135.501
+        }
+      ]
+    }
+  ],
+
+  "days": [
+    {
+      "key": "day1",
+      "label": "Day 1",
+      "title": "台北 → 大阪",
+      "theme": "抵達日",
+      "hero": "道頓堀",
+      "stops": [
+        {
+          "time": "09:00",
+          "name": "桃園機場",
+          "maps_label": "Taoyuan Airport",
+          "short_address": "台灣",
+          "stay": "120 分",
+          "cost": "",
+          "address": "桃園機場第一航廈",
+          "note": "提前兩小時到",
+          "next": "關西機場",
+          "map": "https://maps.google.com/?q=Taoyuan+Airport",
+          "highlight": true,
+          "lat": 25.0797,
+          "lng": 121.2342,
+          "tags": [
+            "交通"
+          ]
+        },
+        {
+          "time": "18:00",
+          "name": "道頓堀",
+          "maps_label": "Dotonbori",
+          "short_address": "大阪",
+          "stay": "180 分",
+          "cost": "",
+          "address": "大阪道頓堀",
+          "note": "晚上逛街",
+          "next": "回飯店",
+          "map": "https://maps.google.com/?q=Dotonbori",
+          "highlight": false,
+          "lat": 34.6687,
+          "lng": 135.501,
+          "tags": [
+            "景點",
+            "美食"
+          ]
+        }
+      ]
+    }
+  ],
+
+  "references": [
+    {
+      "title": "Visit Japan Web",
+      "url": "https://vjw-lp.digital.go.jp/",
+      "source": "manual"
+    }
+  ]
+}

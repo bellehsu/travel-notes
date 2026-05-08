@@ -606,6 +606,100 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 function escapeHtml(v){return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function nonEmpty(v){return v !== undefined && v !== null && String(v).trim() !== '';}
+
+function safeArray(v){ return Array.isArray(v) ? v : []; }
+function safeObject(v){ return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
+function strOrEmpty(v){ return v === undefined || v === null ? '' : String(v); }
+function numOrZero(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
+function emptyTripData(){
+  return {
+    title: '旅遊計畫', subtitle: '', dates: '', travelers: 0, budget_per_person: 0, nights: '',
+    stay_tabs_name: '住宿', shop_tabs_name: '資訊分類', budget_tabs_name: '預算', day_tabs_name: '每日行程',
+    budget_items: [], reminders: [], stay_groups: [], shop_groups: [], days: [], references: []
+  };
+}
+function normalizeTripData(input){
+  const src = safeObject(input);
+  const data = {...emptyTripData(), ...src};
+  data.title = strOrEmpty(data.title) || '旅遊計畫';
+  data.subtitle = strOrEmpty(data.subtitle);
+  data.dates = strOrEmpty(data.dates);
+  data.travelers = numOrZero(data.travelers);
+  data.budget_per_person = numOrZero(data.budget_per_person);
+  data.nights = strOrEmpty(data.nights);
+  data.stay_tabs_name = strOrEmpty(data.stay_tabs_name) || '住宿';
+  data.shop_tabs_name = strOrEmpty(data.shop_tabs_name) || '資訊分類';
+  data.budget_tabs_name = strOrEmpty(data.budget_tabs_name) || '預算';
+  data.day_tabs_name = strOrEmpty(data.day_tabs_name) || '每日行程';
+  data.reminders = safeArray(data.reminders).map(x => strOrEmpty(x)).filter(Boolean);
+  data.references = safeArray(data.references).map((r, i) => {
+    r = safeObject(r);
+    return { title: strOrEmpty(r.title) || strOrEmpty(r.url) || `參考網站 ${i+1}`, url: strOrEmpty(r.url), source: strOrEmpty(r.source) || 'manual' };
+  });
+  data.budget_items = safeArray(data.budget_items).map((b, i) => {
+    b = safeObject(b);
+    return {
+      label: strOrEmpty(b.label) || `預算 ${i+1}`,
+      value: numOrZero(b.value),
+      details: safeArray(b.details).map(d => { d = safeObject(d); return { name: strOrEmpty(d.name), amount: numOrZero(d.amount), note: strOrEmpty(d.note) }; })
+    };
+  });
+  data.stay_groups = safeArray(data.stay_groups).map((g, gi) => {
+    g = safeObject(g);
+    return {
+      key: strOrEmpty(g.key) || `stay${gi+1}`,
+      label: strOrEmpty(g.label) || `住宿 ${gi+1}`,
+      items: safeArray(g.items).map(it => { it = safeObject(it); return {
+        area: strOrEmpty(it.area), name: strOrEmpty(it.name) || '(未命名住宿)', note: strOrEmpty(it.note), reference: strOrEmpty(it.reference),
+        address: strOrEmpty(it.address), link: strOrEmpty(it.link), map: strOrEmpty(it.map),
+        lat: typeof it.lat === 'number' ? it.lat : undefined, lng: typeof it.lng === 'number' ? it.lng : undefined
+      }; })
+    };
+  });
+  data.shop_groups = safeArray(data.shop_groups).map((g, gi) => {
+    g = safeObject(g);
+    return {
+      key: strOrEmpty(g.key) || `shop${gi+1}`,
+      label: strOrEmpty(g.label) || `分類 ${gi+1}`,
+      items: safeArray(g.items).map(it => { it = safeObject(it); return {
+        name: strOrEmpty(it.name) || '(未命名地點)', tag: strOrEmpty(it.tag), price: strOrEmpty(it.price), note: strOrEmpty(it.note),
+        address: strOrEmpty(it.address), link: strOrEmpty(it.link), map: strOrEmpty(it.map),
+        lat: typeof it.lat === 'number' ? it.lat : undefined, lng: typeof it.lng === 'number' ? it.lng : undefined
+      }; })
+    };
+  });
+  data.days = safeArray(data.days).map((day, di) => {
+    day = safeObject(day);
+    const key = strOrEmpty(day.key) || `day${di+1}`;
+    return {
+      key,
+      label: strOrEmpty(day.label) || `Day ${di+1}`,
+      title: strOrEmpty(day.title) || `Day ${di+1}`,
+      theme: strOrEmpty(day.theme),
+      hero: strOrEmpty(day.hero),
+      stops: safeArray(day.stops).map((stop) => {
+        stop = safeObject(stop);
+        return {
+          time: strOrEmpty(stop.time),
+          name: strOrEmpty(stop.name) || '(未命名行程)',
+          maps_label: strOrEmpty(stop.maps_label),
+          short_address: strOrEmpty(stop.short_address),
+          stay: strOrEmpty(stop.stay),
+          cost: strOrEmpty(stop.cost),
+          address: strOrEmpty(stop.address),
+          note: strOrEmpty(stop.note),
+          next: strOrEmpty(stop.next),
+          map: strOrEmpty(stop.map),
+          highlight: !!stop.highlight,
+          tags: safeArray(stop.tags).map(t => strOrEmpty(t).trim()).filter(Boolean),
+          lat: typeof stop.lat === 'number' ? stop.lat : undefined,
+          lng: typeof stop.lng === 'number' ? stop.lng : undefined
+        };
+      })
+    };
+  });
+  return data;
+}
 function money(v){return new Intl.NumberFormat('zh-TW',{style:'currency',currency:'TWD',maximumFractionDigits:0}).format(Number(v||0));}
 function uid(){return 'u' + Math.random().toString(36).slice(2,9);}
 function setStatus(t){ const el = $('#loadStatus'); if(el) el.textContent = t; }
@@ -955,10 +1049,10 @@ async function loadFromDriveById(fileId, name){
     driveState.dirty = false;
     saveDriveSettings();
     // 直接寫入畫面（避開 saveData 觸發自動儲存的循環）
-    state.data = parsed;
-    state.activeDay = parsed.days?.[0]?.key || '';
-    state.activeStay = parsed.stay_groups?.[0]?.key || '';
-    state.activeShop = parsed.shop_groups?.[0]?.key || '';
+    state.data = normalizeTripData(parsed);
+    state.activeDay = state.data.days?.[0]?.key || '';
+    state.activeStay = state.data.stay_groups?.[0]?.key || '';
+    state.activeShop = state.data.shop_groups?.[0]?.key || '';
     state.editing = null;
     state.currentMapId = '';
     // [暫時關閉] 不快取到 localStorage，重整時會重新從 Drive / 預設 trip.json 載入
@@ -1061,7 +1155,7 @@ function scheduleDriveAutoSave(){
 }
 
 function setData(newData){
-  state.data = newData;
+  state.data = normalizeTripData(newData);
   normalizeStopTags();
   if(!state.activeDay) state.activeDay = newData.days?.[0]?.key || '';
   if(!state.activeStay) state.activeStay = newData.stay_groups?.[0]?.key || '';
@@ -4075,13 +4169,12 @@ async function loadInitial(){
   await loadDefaultJson();
 }
 
-// 預設 trip.json 來源：寫死指向 GitHub jp2026 分支的 raw 檔
-// 這樣不管在哪個網域、本機 file:// 或其他 origin 打開，都能讀到最新內容
-const DEFAULT_TRIP_URL = 'https://raw.githubusercontent.com/eithwa/travel-notes/jp2026/trip.json';
+// 預設資料來源：優先讀取 index.html 同層的 default.json；若你仍沿用舊檔名，也會 fallback 到 trip.json。
+const DEFAULT_TRIP_URL = '';
 
 async function loadDefaultJson(){
-  // 依序嘗試：同 origin 的相對路徑（部署在 jp2026 時最快） → GitHub raw（保底，全球可用）
   const candidates = [];
+  try{ candidates.push(new URL('default.json', document.baseURI).href); }catch(e){}
   try{ candidates.push(new URL('trip.json', document.baseURI).href); }catch(e){}
   if(!candidates.includes(DEFAULT_TRIP_URL)) candidates.push(DEFAULT_TRIP_URL);
 
@@ -4091,13 +4184,14 @@ async function loadDefaultJson(){
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const parsed = await res.json();
       setData(parsed);
-      setStatus(url === DEFAULT_TRIP_URL ? '目前使用 GitHub jp2026 的 trip.json' : '目前使用預設 trip.json');
+      setStatus(url === DEFAULT_TRIP_URL ? '目前使用 GitHub jp2026 的 trip.json' : (url.endsWith('/default.json') ? '目前使用同層 default.json' : '目前使用同層 trip.json'));
       return;
     }catch(err){
       console.warn('載入 ' + url + ' 失敗：', err);
     }
   }
-  setStatus('預設 trip.json 載入失敗（請檢查網路連線）');
+  setData(emptyTripData());
+  setStatus('預設 JSON 載入失敗，已使用空白資料避免頁面失敗');
 }
 
 async function loadJsonFile(file){
