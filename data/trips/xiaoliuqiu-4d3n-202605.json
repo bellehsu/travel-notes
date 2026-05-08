@@ -24,81 +24,81 @@
   "nights": "屏東 3 晚",
   "budget_items": [
     {
+      "key": "transport",
       "label": "交通",
-      "value": 3960,
+      "value": 5000,
       "details": [
         {
           "name": "高鐵來回",
-          "amount": 3000,
-          "note": ""
+          "amount": 3000
         },
         {
-          "name": "左營↔東港計程車",
-          "amount": 400,
-          "note": ""
+          "name": "左營↔東港台灣好行",
+          "amount": 400
         },
         {
           "name": "東港↔小琉球來回船票",
-          "amount": 400,
-          "note": ""
+          "amount": 400
         },
         {
           "name": "島上交通",
-          "amount": 160,
-          "note": "機車 / 電動車"
+          "amount": 800
+        },
+        {
+          "name": "其他",
+          "amount": 400
         }
       ]
     },
+
     {
+      "key": "stay",
       "label": "住宿",
-      "value": 3000,
+      "value": 2500,
       "details": [
         {
           "name": "小琉球住宿",
-          "amount": 2000,
-          "note": "2 晚"
+          "amount": 1500
         },
         {
           "name": "東港住宿",
-          "amount": 1000,
-          "note": "1 晚"
+          "amount": 1000
         }
       ]
     },
+
     {
+      "key": "food",
       "label": "餐飲",
       "value": 6300,
       "details": [
         {
           "name": "早餐",
-          "amount": 300,
-          "note": ""
+          "amount": 300
         },
         {
           "name": "午餐",
-          "amount": 3500,
-          "note": "小琉球"
+          "amount": 3500
         },
         {
           "name": "晚餐",
-          "amount": 2000,
-          "note": "小琉球"
+          "amount": 2000
         },
         {
           "name": "下午茶",
-          "amount": 500,
-          "note": "小琉球"
+          "amount": 500
         }
       ]
     },
+
     {
+      "key": "activity",
       "label": "活動",
       "value": 4100,
       "details": [
         {
           "name": "浮潛",
-          "amount": 400,
-          "note": ""
+          "amount": 400
         },
         {
           "name": "水肺潛水",
@@ -107,35 +107,156 @@
         },
         {
           "name": "SUP",
-          "amount": 1200,
-          "note": ""
+          "amount": 1200
         }
       ]
     },
+
     {
+      "key": "other",
       "label": "其他",
       "value": 500,
       "details": [
         {
           "name": "伴手禮",
-          "amount": 500,
-          "note": "華僑市場 / 東港"
+          "amount": 500
         }
       ]
     }
   ],
-  "stays": [
+
+  "reminders": [
     {
-      "area": "小琉球",
-      "name": "小琉球民宿 / 旅館",
-      "note": "靠近碼頭或市區較方便，可搭配租機車 / 電動自行車",
-      "address": ""
+      "text": "東港↔小琉球船班建議提早 30 分鐘報到"
     },
     {
-      "area": "東港",
-      "name": "東港飯店",
-      "note": "第 3 晚住宿，方便隔天回左營搭高鐵",
-      "address": ""
+      "text": "黑鮪魚價格波動大，實際以當天店家為準"
+    },
+    {
+      "text": "水肺潛水建議穿長袖防曬衣，SUP 建議穿速乾衣物"
+    },
+    {
+      "text": "海洋友善防曬乳(妮維雅，Biore，曼秀雷敦，DR.WU，雪芙蘭)"
+    },
+    {
+      "text": "需自備牙刷牙膏等盥洗用品，部分民宿不提供"
+    },
+    {
+      "text": "小琉球機車租借需攜帶駕照原件，電動自行車則不需要"
+    },
+    {
+      "text": "小琉球民宿，靠近碼頭或市區較方便"
+    },
+    {
+      "text": "東港民宿，第 3 晚住宿，方便隔天回左營搭高鐵"
+    }
+  ],
+
+  "references": [
+    {
+      "title": "台灣好行 9127D",
+      "url": "https://www.ptbus.com.tw/product_info/16/1/9127D?num=9127D",
+      "type": "交通"
+    },
+
+    {
+      "title": "泰富航運船票",
+      "url": "https://www.kkday.com/zh-tw/product/100243-pingtung-donggang-xiaoliuqiu-ferry-ticket-taifu",
+      "type": "交通"
+    },
+
+    {
+      "title": "推薦潛水點",
+      "url": "https://stayliuqiu.com/best-scuba-diving-shops-in-liuqiu/",
+      "type": "活動"
+    },
+    
+    {
+      "title": "行程三天兩夜必吃小琉球餐飲",
+      "url": "https://stayliuqiu.com/liuqiu-three-day-trip/",
+      "type": "餐飲"
+    },
+
+    {
+      "title": "推薦夜景地點",
+      "url": "https://daolutravel.com/liuqiu-nightscape/",
+      "type": "景點"
+    },
+
+    {
+      "title": "推薦美食推薦",
+      "url": "https://www.dory.com.tw/news-detail/91/",
+      "type": "餐飲"
+    },
+
+    {
+      "title": "小琉球潮間帶",
+      "url": "https://liuchiu-intertidal.tw/index.php?inter=apply&site=2",
+      "type": "活動"
+    },
+
+    {
+      "title": "小琉球熊潛水浮潛體驗",
+      "url": "https://www.kkday.com/zh-tw/product/23499-snorkeling-sea-turtles-xiaoliuqiu-taiwan",
+      "type": "活動",
+      "price": "NT$400",
+      "note": "花瓶岩＆龍蝦洞＆美人洞（三擇一），約 2 小時",
+      "address": "",
+      "map": ""
+    },
+    {
+      "title": "熊潛水SUP立槳體驗",
+      "type": "活動",
+      "price": "NT$1050",
+      "note": "約2小時",
+      "address": "",
+      "url": "https://www.kkday.com/zh-tw/product/138836",
+      "map": ""
+    },
+    {
+      "title": "熊潛水水肺潛水體驗",
+      "type": "活動",
+      "price": "NT$2301",
+      "note": "水肺體驗潛水+浮潛體驗｜一日兩項套裝，約2小時",
+      "address": "",
+      "url": "https://www.kkday.com/zh-tw/product/23476-xiaoliuqiu-taiwan-bear-scuba-diving-experience",
+      "map": ""
+    },
+    {
+      "title": "SUP立槳體驗｜鯨緯渡海洋俱樂部｜贈送空拍照",
+      "type": "活動",
+      "price": "NT$960",
+      "note": "約1.5小時",
+      "address": "",
+      "url": "https://www.kkday.com/zh-tw/product/122749",
+      "map": ""
+    },
+    {
+      "title": "小琉球海盜 SUP・水上自行車 ・獨木舟｜星空導覽・SUP＋浮潛二合一｜贈空拍服務",
+      "type": "活動",
+      "price": "NT$1200",
+      "note": "約1.5–2小時，二人一板＋空拍， 4人以上送星空導覽",
+      "address": "",
+      "url": "https://www.kkday.com/zh-tw/product/122688-xiaoliuqiu-sup-sunrise-sunset-starry-sky-guide-or-2-in-1-sup-snorkeling-free-aerial-shot-taiwan",
+      "map": ""
+    },
+    {
+      "title": "小琉球小海龜水上活動／浮潛／獨木舟／SUP板／體驗深潛（贈拍照）",
+      "type": "活動",
+      "price": "NT$590",
+      "note": "約90分鐘、教練、攝影",
+      "address": "",
+      "url": "https://www.klook.com/zh-TW/activity/111454-snorkeling-canoeing-sup-and-discover-scuba-diving-in-xiaoliuqiu/?spm=SearchResult.SearchResult_LIST&clickId=79b95527ec",
+      "map": ""
+    },
+    {
+      "title": "浮潛 ･ 獨木舟 ∙ SUP ∙ 體驗潛水",
+      "type": "活動",
+      "price": "NT$1800",
+      "note": "四人以上成團，約270",
+      "address": "",
+      "url": "https://www.kkday.com/zh-tw/product/126603-kkday-high-speed-rail-free-allocation-snorkeling-canoe-sup-diving-experience-25-discount-on-high-speed-rail-ticket-xiaoliuqiu-taiwan",
+      "map": ""
     }
   ],
   "shops": [
@@ -237,106 +358,19 @@
       },
       "map": "https://maps.google.com/?q=22.46845433722664,120.44651536562186",
       "note": "07:00–14:30"
-    },
-    {
-      "tag": "交通",
-      "name": "台灣好行",
-      "price": {
-        "kind": "fixed",
-        "amount": 122
-      },
-      "link": "https://www.ptbus.com.tw/product_info/16/1/9127D?num=9127D",
-      "note": "左營高鐵站 2 號出口購票"
-    },
-    {
-      "tag": "交通",
-      "name": "泰富航運",
-      "price": {
-        "kind": "fixed",
-        "amount": 360
-      },
-      "link": "https://www.kkday.com/zh-tw/product/100243-pingtung-donggang-xiaoliuqiu-ferry-ticket-taifu",
-      "note": "東港↔小琉球來回船票"
-    },
-    {
-      "tag": "交通",
-      "name": "泰富航運",
-      "price": {
-        "kind": "fixed",
-        "amount": 683.5
-      },
-      "link": "https://www.kkday.com/zh-tw/product/100243-pingtung-donggang-xiaoliuqiu-ferry-ticket-taifu",
-      "note": "東港↔小琉球來回船票+機車48H"
-    },
-    {
-      "tag": "活動",
-      "name": "浮潛",
-      "price": {
-        "kind": "fixed",
-        "amount": 400
-      },
-      "note": "約 1-1.5 小時"
-    },
-    {
-      "tag": "活動",
-      "name": "水肺潛水",
-      "price": {
-        "kind": "fixed",
-        "amount": 2500
-      },
-      "note": "約 2.5 小時，無證照可體驗"
-    },
-    {
-      "tag": "活動",
-      "name": "SUP",
-      "price": {
-        "kind": "fixed",
-        "amount": 1200
-      },
-      "link": "https://www.kkday.com/zh-tw/product/122688-xiaoliuqiu-sup-sunrise-sunset-starry-sky-guide-or-2-in-1-sup-snorkeling-free-aerial-shot-taiwan",
-      "note": "約1.5–2小時，二人一板＋空拍， 4人以上送星空導覽"
-    },
-    {
-      "tag": "活動",
-      "name": "雙人獨木舟",
-      "price": {
-        "kind": "fixed",
-        "amount": 590
-      },
-      "link": "https://www.klook.com/zh-TW/activity/111454-snorkeling-canoeing-sup-and-discover-scuba-diving-in-xiaoliuqiu/?spm=SearchResult.SearchResult_LIST&clickId=79b95527ec",
-      "note": "約90分鐘、教練、攝影"
-    },
-    {
-      "tag": "交通",
-      "name": "東港↔小琉球船票",
-      "price": {
-        "kind": "fixed",
-        "amount": 400
-      },
-      "note": "來回票，建議提早 30 分鐘報到"
-    },
-    {
-      "tag": "交通",
-      "name": "高鐵",
-      "price": {
-        "kind": "range",
-        "min": 1490,
-        "max": 1530
-      },
-      "note": "台北 / 南港 ↔ 左營"
     }
   ],
   "days": [
     {
       "key": 1,
-      "title": "高鐵南下｜東港黑鮪魚｜登島浮潛",
+      "title": "高鐵南下｜東港黑鮪魚",
       "theme": "移動 + 海島開場",
-      "hero": "浮潛",
+      "hero": "東港黑鮪魚",
       "stops": [
         {
           "name": "南港 / 台北搭高鐵往左營",
           "type": "交通",
-          "start_time": "08:40",
+          "start_time": "08:20",
           "duration_min": 120,
           "transit_to_next_min": "",
           "price": {
@@ -354,7 +388,7 @@
         {
           "name": "左營→東港",
           "type": "交通",
-          "start_time": "10:40",
+          "start_time": "10:30",
           "duration_min": 60,
           "price": {
             "kind": "range",
@@ -420,32 +454,39 @@
           "show_in_map_info": false
         },
         {
-          "name": "浮潛",
-          "type": "活動",
+          "name": "柒柒里咖啡",
+          "type": "咖啡廳",
           "start_time": "15:00",
-          "duration_min": 90,
-          "transit_to_next_min": 30,
+          "duration_min": 40,
+          "transit_to_next_min": 15,
           "price": {
-            "kind": "fixed",
-            "amount": 400
+            "kind": "range",
+            "min": 100,
+            "max": 400
           },
           "address": {
             "short": "",
             "full": ""
           },
-          "note": "約 1~1.5 小時",
-          "highlight": true,
+          "map": "https://maps.google.com/?q=22.351368443963487,120.37769959757236",
+          "note": "",
+          "highlight": false,
           "show_in_map_info": false
         },
         {
-          "name": "自由活動",
-          "type": "自由活動",
-          "start_time": "17:00",
+          "name": "杉福潮間帶解說",
+          "type": "活動",
+          "start_time": "16:00",
           "duration_min": 60,
+          "price": {
+            "kind": "fixed",
+            "amount": 60
+          },
           "address": {
             "short": "",
             "full": ""
           },
+          "map": "https://maps.google.com/?q=22.34281664017182,120.36255926854392",
           "note": "",
           "show_in_map_info": false
         },
@@ -484,7 +525,7 @@
         {
           "name": "早餐",
           "type": "餐飲",
-          "start_time": "08:00",
+          "start_time": "07:00",
           "duration_min": 60,
           "price": {
             "kind": "fixed",
@@ -500,8 +541,8 @@
         {
           "name": "水肺潛水",
           "type": "活動",
-          "start_time": "09:00",
-          "duration_min": 180,
+          "start_time": "08:00",
+          "duration_min": 240,
           "price": {
             "kind": "fixed",
             "amount": 2500
@@ -533,7 +574,7 @@
         {
           "name": "SUP",
           "type": "活動",
-          "start_time": "14:00",
+          "start_time": "15:00",
           "duration_min": 180,
           "price": {
             "kind": "fixed",
@@ -579,14 +620,14 @@
     },
     {
       "key": 3,
-      "title": "回東港｜黑鮪魚二刷｜大鵬灣散步",
-      "theme": "離島回本島，改住東港",
-      "hero": "東港黑鮪魚",
+      "title": "回東港",
+      "theme": "小琉球最後一夜",
+      "hero": "",
       "stops": [
         {
           "name": "早餐",
           "type": "餐飲",
-          "start_time": "09:00",
+          "start_time": "07:00",
           "duration_min": 60,
           "price": {
             "kind": "range",
@@ -603,13 +644,8 @@
         {
           "name": "自由活動 / 咖啡廳",
           "type": "自由活動",
-          "start_time": "10:00",
-          "duration_min": 70,
-          "price": {
-            "kind": "range",
-            "min": 100,
-            "max": 300
-          },
+          "start_time": "08:00",
+          "duration_min": 240,
           "address": {
             "short": "",
             "full": ""
@@ -618,9 +654,21 @@
           "show_in_map_info": false
         },
         {
+          "name": "夏味鮮海鮮",
+          "type": "餐飲",
+          "start_time": "12:00",
+          "duration_min": 120,
+          "address": {
+            "short": "",
+            "full": ""
+          },
+          "note": "鬼頭刀、炒螺肉、南瓜海鮮鍋",
+          "show_in_map_info": false
+        },
+        {
           "name": "小琉球碼頭搭船回東港",
           "type": "交通",
-          "start_time": "11:10",
+          "start_time": "14:30",
           "duration_min": 30,
           "address": {
             "short": "",
@@ -630,57 +678,16 @@
           "show_in_map_info": false
         },
         {
-          "name": "東港吃鮪魚",
-          "type": "餐飲",
-          "start_time": "11:40",
-          "duration_min": 80,
-          "price": {
-            "kind": "range",
-            "min": 300,
-            "max": 1000
-          },
-          "address": {
-            "short": "華僑市場",
-            "full": ""
-          },
-          "note": "推薦黑鮪魚：王匠黑鮪魚、國珍海產店、大鵬灣珍珍海鮮、東昇餐廳",
-          "highlight": true,
-          "show_in_map_info": false
-        },
-        {
-          "name": "放行李 / 休息",
-          "type": "住宿",
-          "start_time": "13:00",
-          "duration_min": 60,
-          "address": {
-            "short": "",
-            "full": ""
-          },
-          "note": "",
-          "show_in_map_info": false
-        },
-        {
-          "name": "華僑市場 / 漁港逛街",
-          "type": "購物",
-          "start_time": "14:00",
-          "duration_min": 150,
-          "address": {
-            "short": "",
-            "full": ""
-          },
-          "note": "買伴手禮",
-          "show_in_map_info": false
-        },
-        {
           "name": "大鵬灣風景區",
           "type": "景點",
-          "start_time": "16:30",
+          "start_time": "15:30",
           "duration_min": 90,
           "address": {
             "short": "",
             "full": ""
           },
           "note": "散步 / 看海",
+          "highlight": true,
           "show_in_map_info": false
         },
         {
@@ -701,21 +708,10 @@
           "show_in_map_info": false
         },
         {
-          "name": "夜間散步 / 自由活動",
-          "type": "自由活動",
-          "start_time": "19:30",
-          "duration_min": 90,
-          "address": {
-            "short": "",
-            "full": ""
-          },
-          "show_in_map_info": false
-        },
-        {
           "name": "回飯店休息",
           "type": "住宿",
           "start_time": "21:00",
-          "duration_min": 540,
+          "duration_min": 720,
           "address": {
             "short": "",
             "full": ""
@@ -748,23 +744,6 @@
           "show_in_map_info": false
         },
         {
-          "name": "自由活動 / 咖啡廳",
-          "type": "自由活動",
-          "start_time": "10:00",
-          "duration_min": 60,
-          "price": {
-            "kind": "range",
-            "min": 0,
-            "max": 200
-          },
-          "address": {
-            "short": "",
-            "full": ""
-          },
-          "note": "",
-          "show_in_map_info": false
-        },
-        {
           "name": "午餐黑鮪魚",
           "type": "餐飲",
           "start_time": "11:00",
@@ -783,9 +762,23 @@
           "show_in_map_info": false
         },
         {
-          "name": "東港→左營計程車",
+          "name": "華僑市場最後購物",
+          "type": "購物",
+          "start_time": "15:00",
+          "duration_min": 90,
+          "transit_to_next_min": 30,
+          "address": {
+            "short": "",
+            "full": ""
+          },
+          "note": "",
+          "highlight": false,
+          "show_in_map_info": false
+        },
+        {
+          "name": "東港→左營",
           "type": "交通",
-          "start_time": "12:30",
+          "start_time": "17:00",
           "duration_min": 60,
           "transit_to_next_min": 60,
           "price": {
@@ -797,13 +790,13 @@
             "short": "",
             "full": ""
           },
-          "note": "",
+          "note": "15:00, 16:45, 17:00",
           "show_in_map_info": false
         },
         {
           "name": "左營→台北 / 南港高鐵",
           "type": "交通",
-          "start_time": "13:55",
+          "start_time": "18:55",
           "duration_min": 120,
           "price": {
             "kind": "fixed",
@@ -819,9 +812,5 @@
         }
       ]
     }
-  ],
-  "reminders": [
-    "東港↔小琉球船班建議提早 30 分鐘報到，水肺潛水與 SUP 建議提前預約並確認天候",
-    "黑鮪魚價格波動大，實際以當天店家為準"
   ]
 }

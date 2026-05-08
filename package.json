@@ -4,6 +4,6 @@
   "private": true,
   "scripts": {
     "build:pages": "node scripts/generate-pages.js",
-    "test": "npx serve . -l 8000 "
+    "test": "npx serve . -l 8000 --no-clipboard"
   }
 }

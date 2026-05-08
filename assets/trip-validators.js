@@ -10,446 +10,135 @@ export function isValidTimeHHmm(value) {
   return typeof value === "string" && /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
 }
 
-function validatePrice(price, path, errors) {
-  if (!isObject(price)) {
-    errors.push(`${path} 必須是 object`);
-    return;
-  }
-
-  const allowedKinds = ["fixed", "range", "free"];
-  if (price.kind !== undefined && !allowedKinds.includes(price.kind)) {
-    errors.push(`${path}.kind 必須是 fixed / range / free`);
-  }
-
-  if (price.kind === "fixed" && typeof price.amount !== "number") {
-    errors.push(`${path}.amount 必須是數字`);
-  }
-
-  if (price.kind === "range") {
-    if (price.min !== undefined && typeof price.min !== "number") {
-      errors.push(`${path}.min 必須是數字`);
-    }
-    if (price.max !== undefined && typeof price.max !== "number") {
-      errors.push(`${path}.max 必須是數字`);
-    }
-  }
-
-  if (price.unit !== undefined) {
-    const allowedUnits = ["per_person", "per_group", "per_night", "none"];
-    if (!allowedUnits.includes(price.unit)) {
-      errors.push(`${path}.unit 必須是 per_person / per_group / per_night / none`);
-    }
-  }
+function pushType(errors, path, type) {
+  errors.push(`${path} 必須是 ${type}`);
 }
 
-function validatePhotos(photos, path, errors) {
-  if (!Array.isArray(photos)) {
-    errors.push(`${path} 必須是陣列`);
-    return;
+function validatePrice(price, path, errors) {
+  if (price === undefined || price === null || price === "") return;
+  if (typeof price === "string" || typeof price === "number") return;
+  if (!isObject(price)) return pushType(errors, path, "object / string / number");
+
+  const allowedKinds = ["fixed", "range", "free", "text"];
+  if (price.kind !== undefined && !allowedKinds.includes(price.kind)) {
+    errors.push(`${path}.kind 必須是 fixed / range / free / text`);
   }
-
-  photos.forEach((photo, index) => {
-    const p = `${path}[${index}]`;
-
-    if (typeof photo === "string") return;
-
-    if (!isObject(photo)) {
-      errors.push(`${p} 必須是 string 或 object`);
-      return;
-    }
-
-    if (!isNonEmptyString(photo.src)) {
-      errors.push(`${p}.src 必填且必須是字串`);
-    }
-
-    if (photo.alt !== undefined && typeof photo.alt !== "string") {
-      errors.push(`${p}.alt 必須是字串`);
-    }
+  ["amount", "min", "max"].forEach((key) => {
+    if (price[key] !== undefined && typeof price[key] !== "number") errors.push(`${path}.${key} 必須是數字`);
   });
+  if (price.text !== undefined && typeof price.text !== "string") errors.push(`${path}.text 必須是字串`);
 }
 
 function validateAddress(address, path, errors) {
-  if (!isObject(address)) {
-    errors.push(`${path} 必須是 object`);
-    return;
-  }
-
-  if (address.short !== undefined && typeof address.short !== "string") {
-    errors.push(`${path}.short 必須是字串`);
-  }
-
-  if (address.full !== undefined && typeof address.full !== "string") {
-    errors.push(`${path}.full 必須是字串`);
-  }
+  if (address === undefined) return;
+  if (typeof address === "string") return;
+  if (!isObject(address)) return pushType(errors, path, "object 或 string");
+  if (address.short !== undefined && typeof address.short !== "string") pushType(errors, `${path}.short`, "字串");
+  if (address.full !== undefined && typeof address.full !== "string") pushType(errors, `${path}.full`, "字串");
 }
 
-function validateStayItem(item, path, errors) {
-  if (!isObject(item)) {
-    errors.push(`${path} 必須是 object`);
-    return;
-  }
-
-  if (item.area !== undefined && typeof item.area !== "string") {
-    errors.push(`${path}.area 必須是字串`);
-  }
-
-  if (item.name !== undefined && typeof item.name !== "string") {
-    errors.push(`${path}.name 必須是字串`);
-  }
-
-  if (item.note !== undefined && typeof item.note !== "string") {
-    errors.push(`${path}.note 必須是字串`);
-  }
-
-  if (item.address !== undefined && typeof item.address !== "string") {
-    errors.push(`${path}.address 必須是字串`);
-  }
-
-  if (item.map !== undefined && typeof item.map !== "string") {
-    errors.push(`${path}.map 必須是字串`);
-  }
-
-  if (item.link !== undefined && typeof item.link !== "string") {
-    errors.push(`${path}.link 必須是字串`);
-  }
-
-  if (item.photos !== undefined) {
-    validatePhotos(item.photos, `${path}.photos`, errors);
-  }
+function validatePhotos(photos, path, errors) {
+  if (photos === undefined) return;
+  if (!Array.isArray(photos)) return pushType(errors, path, "陣列");
+  photos.forEach((photo, index) => {
+    const p = `${path}[${index}]`;
+    if (typeof photo === "string") return;
+    if (!isObject(photo)) return pushType(errors, p, "string 或 object");
+    if (!isNonEmptyString(photo.src)) errors.push(`${p}.src 必填且必須是非空字串`);
+    if (photo.alt !== undefined && typeof photo.alt !== "string") pushType(errors, `${p}.alt`, "字串");
+  });
 }
 
-function validateShopItem(item, path, errors) {
-  if (!isObject(item)) {
-    errors.push(`${path} 必須是 object`);
-    return;
-  }
+function validateMapLike(item, path, errors) {
+  if (item.name !== undefined && typeof item.name !== "string") pushType(errors, `${path}.name`, "字串");
+  if (item.map !== undefined && typeof item.map !== "string") pushType(errors, `${path}.map`, "字串");
+  if (item.link !== undefined && typeof item.link !== "string") pushType(errors, `${path}.link`, "字串");
+  if (item.note !== undefined && typeof item.note !== "string") pushType(errors, `${path}.note`, "字串");
+  if (item.lat !== undefined && typeof item.lat !== "number") pushType(errors, `${path}.lat`, "數字");
+  if (item.lng !== undefined && typeof item.lng !== "number") pushType(errors, `${path}.lng`, "數字");
+  if (item.show_in_map_info !== undefined && typeof item.show_in_map_info !== "boolean") pushType(errors, `${path}.show_in_map_info`, "boolean");
+  validatePhotos(item.photos, `${path}.photos`, errors);
+}
 
-  if (item.tag !== undefined && typeof item.tag !== "string") {
-    errors.push(`${path}.tag 必須是字串`);
-  }
-
-  if (item.name !== undefined && typeof item.name !== "string") {
-    errors.push(`${path}.name 必須是字串`);
-  }
-
-  if (item.note !== undefined && typeof item.note !== "string") {
-    errors.push(`${path}.note 必須是字串`);
-  }
-
-  if (item.address !== undefined && typeof item.address !== "string") {
-    errors.push(`${path}.address 必須是字串`);
-  }
-
-  if (item.map !== undefined && typeof item.map !== "string") {
-    errors.push(`${path}.map 必須是字串`);
-  }
-
-  if (item.link !== undefined && typeof item.link !== "string") {
-    errors.push(`${path}.link 必須是字串`);
-  }
-
-  if (item.price !== undefined) {
-    validatePrice(item.price, `${path}.price`, errors);
-  }
-
-  if (item.price_options !== undefined) {
-    if (!Array.isArray(item.price_options)) {
-      errors.push(`${path}.price_options 必須是陣列`);
-    } else {
-      item.price_options.forEach((opt, optIndex) => {
-        const optPath = `${path}.price_options[${optIndex}]`;
-
-        if (!isObject(opt)) {
-          errors.push(`${optPath} 必須是 object`);
-          return;
-        }
-
-        if (opt.label !== undefined && typeof opt.label !== "string") {
-          errors.push(`${optPath}.label 必須是字串`);
-        }
-
-        if (opt.amount !== undefined && typeof opt.amount !== "number") {
-          errors.push(`${optPath}.amount 必須是數字`);
-        }
-      });
-    }
-  }
-
-  if (item.photos !== undefined) {
-    validatePhotos(item.photos, `${path}.photos`, errors);
-  }
+function validateStop(stop, path, errors) {
+  if (!isObject(stop)) return pushType(errors, path, "object");
+  validateMapLike(stop, path, errors);
+  if (stop.type !== undefined && typeof stop.type !== "string") pushType(errors, `${path}.type`, "字串");
+  if (stop.maps_label !== undefined && typeof stop.maps_label !== "string") pushType(errors, `${path}.maps_label`, "字串");
+  if (stop.start_time !== undefined && stop.start_time !== "" && !isValidTimeHHmm(stop.start_time)) errors.push(`${path}.start_time 必須是 HH:mm`);
+  if (stop.time !== undefined && stop.time !== "" && !isValidTimeHHmm(stop.time)) errors.push(`${path}.time 必須是 HH:mm`);
+  if (stop.duration_min !== undefined && stop.duration_min !== "" && typeof stop.duration_min !== "number") pushType(errors, `${path}.duration_min`, "數字");
+  if (stop.transit_to_next_min !== undefined && stop.transit_to_next_min !== "" && typeof stop.transit_to_next_min !== "number") pushType(errors, `${path}.transit_to_next_min`, "數字或空字串");
+  validatePrice(stop.price ?? stop.cost, `${path}.price`, errors);
+  validateAddress(stop.address, `${path}.address`, errors);
+  if (stop.short_address !== undefined && typeof stop.short_address !== "string") pushType(errors, `${path}.short_address`, "字串");
+  if (stop.highlight !== undefined && typeof stop.highlight !== "boolean") pushType(errors, `${path}.highlight`, "boolean");
+  if (stop.tags !== undefined && (!Array.isArray(stop.tags) || stop.tags.some((x) => typeof x !== "string"))) errors.push(`${path}.tags 必須是字串陣列`);
 }
 
 function validateBudgetItem(item, path, errors) {
-  if (!isObject(item)) {
-    errors.push(`${path} 必須是 object`);
-    return;
-  }
-
-  if (item.label !== undefined && typeof item.label !== "string") {
-    errors.push(`${path}.label 必須是字串`);
-  }
-
-  if (item.value !== undefined && typeof item.value !== "number") {
-    errors.push(`${path}.value 必須是數字`);
-  }
-
+  if (!isObject(item)) return pushType(errors, path, "object");
+  if (item.label !== undefined && typeof item.label !== "string") pushType(errors, `${path}.label`, "字串");
+  if (item.value !== undefined && typeof item.value !== "number") pushType(errors, `${path}.value`, "數字");
   if (item.details !== undefined) {
-    if (!Array.isArray(item.details)) {
-      errors.push(`${path}.details 必須是陣列`);
-    } else {
-      item.details.forEach((detail, detailIndex) => {
-        const detailPath = `${path}.details[${detailIndex}]`;
-
-        if (!isObject(detail)) {
-          errors.push(`${detailPath} 必須是 object`);
-          return;
-        }
-
-        if (detail.name !== undefined && typeof detail.name !== "string") {
-          errors.push(`${detailPath}.name 必須是字串`);
-        }
-
-        if (detail.amount !== undefined && typeof detail.amount !== "number") {
-          errors.push(`${detailPath}.amount 必須是數字`);
-        }
-
-        if (detail.note !== undefined && typeof detail.note !== "string") {
-          errors.push(`${detailPath}.note 必須是字串`);
-        }
-      });
-    }
+    if (!Array.isArray(item.details)) return pushType(errors, `${path}.details`, "陣列");
+    item.details.forEach((detail, i) => {
+      if (!isObject(detail)) return pushType(errors, `${path}.details[${i}]`, "object");
+      if (detail.name !== undefined && typeof detail.name !== "string") pushType(errors, `${path}.details[${i}].name`, "字串");
+      if (detail.amount !== undefined && typeof detail.amount !== "number") pushType(errors, `${path}.details[${i}].amount`, "數字");
+      if (detail.note !== undefined && typeof detail.note !== "string") pushType(errors, `${path}.details[${i}].note`, "字串");
+    });
   }
 }
 
 export function validateTripData(data) {
   const errors = [];
+  if (!isObject(data)) return { valid: false, errors: ["根節點必須是 object"] };
 
-  if (!isObject(data)) {
-    return { valid: false, errors: ["根節點必須是 object"] };
-  }
-
-  if (!isNonEmptyString(data.title)) {
-    errors.push("title 必填，且必須是非空字串");
-  }
-
-  if (data.subtitle !== undefined && typeof data.subtitle !== "string") {
-    errors.push("subtitle 必須是字串");
-  }
-
-  if (data.summary !== undefined && typeof data.summary !== "string") {
-    errors.push("summary 必須是字串");
-  }
-
-  if (data.coverImage !== undefined && typeof data.coverImage !== "string") {
-    errors.push("coverImage 必須是字串");
-  }
-
-  if (data.tags !== undefined) {
-    if (!Array.isArray(data.tags)) {
-      errors.push("tags 必須是陣列");
-    } else {
-      data.tags.forEach((tag, index) => {
-        if (typeof tag !== "string") {
-          errors.push(`tags[${index}] 必須是字串`);
-        }
-      });
-    }
-  }
-
-  if (data.lastmod !== undefined && typeof data.lastmod !== "string") {
-    errors.push("lastmod 必須是字串");
-  }
-
-  if (data.defaults !== undefined) {
-    if (!isObject(data.defaults)) {
-      errors.push("defaults 必須是 object");
-    } else {
-      if (data.defaults.currency !== undefined && typeof data.defaults.currency !== "string") {
-        errors.push("defaults.currency 必須是字串");
-      }
-
-      if (data.defaults.locale !== undefined && typeof data.defaults.locale !== "string") {
-        errors.push("defaults.locale 必須是字串");
-      }
-
-      if (
-        data.defaults.price_unit !== undefined &&
-        !["per_person", "per_group", "per_night", "none"].includes(data.defaults.price_unit)
-      ) {
-        errors.push("defaults.price_unit 格式錯誤");
-      }
-    }
-  }
-
-  if (data.dates !== undefined && typeof data.dates !== "string") {
-    errors.push("dates 必須是字串");
-  }
-
-  if (data.travelers !== undefined && typeof data.travelers !== "number") {
-    errors.push("travelers 必須是數字");
-  }
-
-  if (data.budget_per_person !== undefined && typeof data.budget_per_person !== "number") {
-    errors.push("budget_per_person 必須是數字");
-  }
-
-  if (data.nights !== undefined && typeof data.nights !== "string") {
-    errors.push("nights 必須是字串");
-  }
-
+  if (!isNonEmptyString(data.title)) errors.push("title 必填，且必須是非空字串");
+  ["subtitle", "summary", "coverImage", "lastmod", "dates", "nights"].forEach((key) => {
+    if (data[key] !== undefined && typeof data[key] !== "string") pushType(errors, key, "字串");
+  });
+  ["travelers", "budget_per_person"].forEach((key) => {
+    if (data[key] !== undefined && typeof data[key] !== "number") pushType(errors, key, "數字");
+  });
+  if (data.tags !== undefined && (!Array.isArray(data.tags) || data.tags.some((x) => typeof x !== "string"))) errors.push("tags 必須是字串陣列");
+  if (data.defaults !== undefined && !isObject(data.defaults)) pushType(errors, "defaults", "object");
   if (data.budget_items !== undefined) {
-    if (!Array.isArray(data.budget_items)) {
-      errors.push("budget_items 必須是陣列");
-    } else {
-      data.budget_items.forEach((item, index) => {
-        validateBudgetItem(item, `budget_items[${index}]`, errors);
-      });
-    }
+    if (!Array.isArray(data.budget_items)) pushType(errors, "budget_items", "陣列");
+    else data.budget_items.forEach((item, i) => validateBudgetItem(item, `budget_items[${i}]`, errors));
   }
-
-  if (data.days !== undefined && !Array.isArray(data.days)) {
-    errors.push("days 必須是陣列");
-  }
-
-  if (Array.isArray(data.days)) {
-    data.days.forEach((day, dayIndex) => {
-      if (!isObject(day)) {
-        errors.push(`days[${dayIndex}] 必須是 object`);
-        return;
-      }
-
-      if (day.key !== undefined && typeof day.key !== "number") {
-        errors.push(`days[${dayIndex}].key 必須是數字`);
-      }
-
-      if (day.label !== undefined && typeof day.label !== "string") {
-        errors.push(`days[${dayIndex}].label 若提供必須是字串`);
-      }
-
-      if (day.title !== undefined && typeof day.title !== "string") {
-        errors.push(`days[${dayIndex}].title 若提供必須是字串`);
-      }
-
-      if (day.theme !== undefined && typeof day.theme !== "string") {
-        errors.push(`days[${dayIndex}].theme 若提供必須是字串`);
-      }
-
-      if (day.hero !== undefined && typeof day.hero !== "string") {
-        errors.push(`days[${dayIndex}].hero 若提供必須是字串`);
-      }
-
-      if (day.stops !== undefined && !Array.isArray(day.stops)) {
-        errors.push(`days[${dayIndex}].stops 必須是陣列`);
-      }
-
-      if (Array.isArray(day.stops)) {
-        day.stops.forEach((stop, stopIndex) => {
-          const path = `days[${dayIndex}].stops[${stopIndex}]`;
-
-          if (!isObject(stop)) {
-            errors.push(`${path} 必須是 object`);
-            return;
-          }
-
-          if (stop.id !== undefined && typeof stop.id !== "string") {
-            errors.push(`${path}.id 若提供必須是字串`);
-          }
-
-          if (stop.name !== undefined && typeof stop.name !== "string") {
-            errors.push(`${path}.name 若提供必須是字串`);
-          }
-
-          if (stop.maps_label !== undefined && typeof stop.maps_label !== "string") {
-            errors.push(`${path}.maps_label 若提供必須是字串`);
-          }
-
-          if (stop.type !== undefined && typeof stop.type !== "string") {
-            errors.push(`${path}.type 若提供必須是字串`);
-          }
-
-          if (stop.start_time !== undefined && !isValidTimeHHmm(stop.start_time)) {
-            errors.push(`${path}.start_time 必須是 HH:mm`);
-          }
-
-          if (stop.end_time !== undefined && !isValidTimeHHmm(stop.end_time)) {
-            errors.push(`${path}.end_time 必須是 HH:mm`);
-          }
-
-          if (stop.duration_min !== undefined && typeof stop.duration_min !== "number") {
-            errors.push(`${path}.duration_min 必須是數字`);
-          }
-
-          if (stop.transit_to_next_min !== undefined && typeof stop.transit_to_next_min !== "number") {
-            errors.push(`${path}.transit_to_next_min 必須是數字`);
-          }
-
-          if (stop.address !== undefined) {
-            validateAddress(stop.address, `${path}.address`, errors);
-          }
-
-          if (stop.map !== undefined && typeof stop.map !== "string") {
-            errors.push(`${path}.map 若提供必須是字串`);
-          }
-
-          if (stop.note !== undefined && typeof stop.note !== "string") {
-            errors.push(`${path}.note 若提供必須是字串`);
-          }
-
-          if (stop.price !== undefined) {
-            validatePrice(stop.price, `${path}.price`, errors);
-          }
-
-          if (stop.photos !== undefined) {
-            validatePhotos(stop.photos, `${path}.photos`, errors);
-          }
-
-          if (stop.highlight !== undefined && typeof stop.highlight !== "boolean") {
-            errors.push(`${path}.highlight 若提供必須是 boolean`);
-          }
-
-          if (stop.show_in_map_info !== undefined && typeof stop.show_in_map_info !== "boolean") {
-            errors.push(`${path}.show_in_map_info 若提供必須是 boolean`);
-          }
-        });
-      }
+  if (!Array.isArray(data.days)) errors.push("days 必填且必須是陣列");
+  else data.days.forEach((day, i) => {
+    if (!isObject(day)) return pushType(errors, `days[${i}]`, "object");
+    if (day.key !== undefined && typeof day.key !== "number" && typeof day.key !== "string") pushType(errors, `days[${i}].key`, "數字或字串");
+    ["label", "title", "theme", "hero"].forEach((key) => {
+      if (day[key] !== undefined && typeof day[key] !== "string") pushType(errors, `days[${i}].${key}`, "字串");
+    });
+    if (!Array.isArray(day.stops)) errors.push(`days[${i}].stops 必填且必須是陣列`);
+    else day.stops.forEach((stop, j) => validateStop(stop, `days[${i}].stops[${j}]`, errors));
+  });
+  if (data.reminders !== undefined) {
+    if (!Array.isArray(data.reminders)) errors.push("reminders 必須是陣列");
+    else data.reminders.forEach((item, i) => {
+      if (typeof item === "string") return;
+      if (!isObject(item)) return pushType(errors, `reminders[${i}]`, "字串或 object");
+      if (item.text !== undefined && typeof item.text !== "string") pushType(errors, `reminders[${i}].text`, "字串");
+      if (item.title !== undefined && typeof item.title !== "string") pushType(errors, `reminders[${i}].title`, "字串");
     });
   }
-
   if (data.stays !== undefined) {
-    if (!Array.isArray(data.stays)) {
-      errors.push("stays 必須是陣列");
-    } else {
-      data.stays.forEach((item, index) => {
-        validateStayItem(item, `stays[${index}]`, errors);
-      });
-    }
+    if (!Array.isArray(data.stays)) pushType(errors, "stays", "陣列");
+    else data.stays.forEach((item, i) => { if (!isObject(item)) return pushType(errors, `stays[${i}]`, "object"); validateMapLike(item, `stays[${i}]`, errors); if (item.area !== undefined && typeof item.area !== "string") pushType(errors, `stays[${i}].area`, "字串"); });
   }
-
   if (data.shops !== undefined) {
-    if (!Array.isArray(data.shops)) {
-      errors.push("shops 必須是陣列");
-    } else {
-      data.shops.forEach((item, index) => {
-        validateShopItem(item, `shops[${index}]`, errors);
-      });
-    }
+    if (!Array.isArray(data.shops)) pushType(errors, "shops", "陣列");
+    else data.shops.forEach((item, i) => { if (!isObject(item)) return pushType(errors, `shops[${i}]`, "object"); validateMapLike(item, `shops[${i}]`, errors); if (item.tag !== undefined && typeof item.tag !== "string") pushType(errors, `shops[${i}].tag`, "字串"); validatePrice(item.price, `shops[${i}].price`, errors); });
+  }
+  if (data.references !== undefined) {
+    if (!Array.isArray(data.references)) pushType(errors, "references", "陣列");
+    else data.references.forEach((r, i) => { if (!isObject(r)) return pushType(errors, `references[${i}]`, "object"); if (r.title !== undefined && typeof r.title !== "string") pushType(errors, `references[${i}].title`, "字串"); if (r.url !== undefined && typeof r.url !== "string") pushType(errors, `references[${i}].url`, "字串"); if (r.type !== undefined && typeof r.type !== "string") pushType(errors, `references[${i}].type`, "字串"); });
   }
 
-  if (data.reminders !== undefined) {
-    if (!Array.isArray(data.reminders)) {
-      errors.push("reminders 必須是陣列");
-    } else {
-      data.reminders.forEach((item, index) => {
-        if (typeof item !== "string") {
-          errors.push(`reminders[${index}] 必須是字串`);
-        }
-      });
-    }
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-  };
+  return { valid: errors.length === 0, errors };
 }

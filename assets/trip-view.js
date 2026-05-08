@@ -1,845 +1,680 @@
-import {
-  nonEmpty,
-  escapeHtml,
-  embedUrl,
-  makeMapTarget,
-  renderExtraRows,
-  extraFields,
-  syncActiveTab,
-} from "./dom-helpers.js";
-import {
-  getDefaults,
-  formatMoney,
-  resolveStopTimeText,
-  resolveStopDurationText,
-  resolveStopTransitText,
-  resolveStopPriceText,
-  resolveShopPriceText,
-  resolveShopPriceOptionsText,
-  renderPhotos,
-  buildMapButton,
-} from "./formatters.js";
 import { normalizeTripData, normalizeStayGroups, normalizeShopGroups } from "./trip-normalizers.js";
 import { validateTripData } from "./trip-validators.js";
-import { createI18n, resolveLocale } from "./i18n.js";
 
-const state = {
-  currentMapId: "",
-  currentLocations: [],
-  i18n: createI18n("zh-TW"),
-};
+const state = { data: null, activeMain: "map", activeMapSub: "days", activeDay: null, currentMapId: "", activeDetailId: "", activeTag: "__all__" };
 
-export function renderTripPage(data) {
-  const normalized = normalizeTripData(data);
-  const validation = validateTripData(normalized);
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+const esc = (v) => String(v ?? "").replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c]));
+const nonEmpty = (v) => v !== undefined && v !== null && String(v).trim() !== "";
 
-  if (!validation.valid) {
-    console.error(validation.errors);
-    renderValidationError(validation.errors, normalized.defaults?.locale);
-    return;
+function formatMoney(value, data = state.data) {
+  const currency = data?.defaults?.currency || "TWD";
+  const locale = data?.defaults?.locale || "zh-TW";
+  return new Intl.NumberFormat(locale, { style: "currency", currency, maximumFractionDigits: 0 }).format(Number(value || 0));
+}
+
+function priceText(price) {
+  if (!price) return "";
+  if (typeof price === "string") return price;
+  if (price.kind === "text") return price.text || "";
+  if (price.kind === "free") return "免費";
+  const unit = price.unit === "per_night" ? " / 晚" : price.unit === "per_group" ? " / 組" : price.unit === "none" ? "" : " / 人";
+  if (price.kind === "fixed" && typeof price.amount === "number") return `${formatMoney(price.amount)}${unit}`;
+  if (price.kind === "range") {
+    const left = typeof price.min === "number" ? formatMoney(price.min) : "";
+    const right = typeof price.max === "number" ? formatMoney(price.max) : "";
+    return [left, right].filter(Boolean).join(" - ") + unit;
   }
-
-  resetState();
-
-  const locale = resolveLocale(normalized.defaults?.locale || "zh-TW");
-  state.i18n = createI18n(locale);
-
-  const defaults = getDefaults(normalized);
-  const stayGroups = normalizeStayGroups(normalized);
-  const shopGroups = normalizeShopGroups(normalized);
-
-  renderShell();
-  renderHeader(normalized, defaults);
-  renderReminders(normalized);
-  renderDaySection(normalized, defaults);
-  renderBudgetSection(normalized, defaults);
-  renderStaySection(stayGroups);
-  renderShopSection(shopGroups, defaults);
-  renderMapSection(normalized, stayGroups, shopGroups, defaults);
+  return "";
 }
 
-function resetState() {
+function durationText(min) {
+  if (typeof min !== "number") return "";
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return [h ? `${h} 小時` : "", m ? `${m} 分` : ""].filter(Boolean).join(" ") || `${min} 分`;
+}
+
+function mapUrl(item) {
+  if (nonEmpty(item?.map)) return item.map;
+  if (typeof item?.lat === "number" && typeof item?.lng === "number") return `https://maps.google.com/?q=${item.lat},${item.lng}`;
+  const label = item?.maps_label || item?.name || item?.address?.full || item?.address || "台灣";
+  return nonEmpty(label) ? `https://maps.google.com/?q=${encodeURIComponent(label)}` : "";
+}
+
+function embedUrl(url) {
+  if (!nonEmpty(url)) return fallbackMapEmbedUrl();
+  try {
+    const u = new URL(url);
+    const q = u.searchParams.get("q") || u.searchParams.get("query") || url;
+    return `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;
+  } catch {
+    return `https://www.google.com/maps?q=${encodeURIComponent(url)}&output=embed`;
+  }
+}
+
+function fallbackMapEmbedUrl() {
+  // 無 map/lat/lng 時只顯示小琉球區域，不用 q 參數，避免產生紅色 marker。
+  return "https://www.google.com/maps/@22.3384,120.3710,13z?output=embed";
+}
+
+function dayLabel(day, index) { return day.label || `Day ${index + 1}`; }
+
+export function renderTripPage(rawData) {
+  const data = normalizeTripData(rawData);
+  const result = validateTripData(data);
+  state.data = data;
+  state.activeDay = data.days[0]?.key ?? null;
   state.currentMapId = "";
-  state.currentLocations = [];
-}
 
-function t(key) {
-  return state.i18n.t(key);
-}
-
-function dayLabel(day, index) {
-  if (nonEmpty(day.label)) return day.label;
-  const key = day.key ?? index + 1;
-  return `${t("day")} ${key}`;
+  if (!result.valid) return renderValidationError(result.errors);
+  renderShell();
+  renderHeader();
+  bindMainTabs();
+  renderActivePanel();
 }
 
 function renderShell() {
   const app = document.getElementById("app");
   if (!app) return;
-
   app.innerHTML = `
-    <div class="wrap">
-      <div class="hero">
-        <h1 id="title">讀取中…</h1>
-        <p id="subtitle"></p>
-
-        <div class="meta">
-          <div class="box"><div class="small">${escapeHtml(t("dates"))}</div><div id="dates"></div></div>
-          <div class="box"><div class="small">${escapeHtml(t("travelers"))}</div><div id="travelers"></div></div>
-          <div class="box"><div class="small">${escapeHtml(t("budgetLimit"))}</div><div id="budgetPerPerson"></div></div>
-          <div class="box"><div class="small">${escapeHtml(t("nights"))}</div><div id="nights"></div></div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:24px">
-        <div class="section-head"><h2>${escapeHtml(t("mapInfo"))}</h2></div>
-        <div class="section-body">
-          <div class="map-shell">
-            <div class="map-frame-wrap">
-              <iframe
-                id="mapFrame"
-                src=""
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
-              ></iframe>
-              <div class="map-focus" id="mapFocus"></div>
-            </div>
-            <div><div class="map-index" id="locationList"></div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="layout">
-        <div class="stack">
-          <div class="card">
-            <div class="section-head"><h2 id="dayTabsName">${escapeHtml(t("itinerary"))}</h2></div>
-            <div class="section-body">
-              <div class="tabs" id="dayTabs"></div>
-              <div id="dayContent"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="stack">
-          <div class="card">
-            <div class="section-head"><h2 id="budgetTabsName">${escapeHtml(t("budgetTabsName"))}</h2></div>
-            <div class="section-body">
-              <div class="tabs" id="budgetTabs"></div>
-              <div id="budgetContent"></div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="section-head"><h2 id="stayTabsName">${escapeHtml(t("stays"))}</h2></div>
-            <div class="section-body">
-              <div class="tabs" id="stayTabs"></div>
-              <div id="stayContent"></div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="section-head"><h2>${escapeHtml(t("reminders"))}</h2></div>
-            <div class="section-body"><div class="list" id="reminderList"></div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:24px">
-        <div class="section-head"><h2 id="shopTabsName">${escapeHtml(t("shops"))}</h2></div>
-        <div class="section-body">
-          <div class="tabs" id="shopTabs"></div>
-          <div id="shopContent"></div>
-        </div>
-      </div>
+    <div class="mobile-topbar">
+      <button class="mobile-menu-btn" type="button" aria-label="切換選單">☰</button>
+      <strong>${esc(state.data.title)}</strong>
     </div>
-  `;
-}
-
-function renderHeader(data, defaults) {
-  document.getElementById("title").textContent = data.title || "";
-  document.getElementById("subtitle").textContent = data.subtitle || "";
-  document.getElementById("dates").textContent = data.dates || "";
-  document.getElementById("travelers").textContent = `${data.travelers || 0}`;
-  document.getElementById("budgetPerPerson").textContent =
-    data.budget_per_person !== undefined
-      ? `${formatMoney(data.budget_per_person || 0, defaults.currency, defaults.locale)} / 1`
-      : "";
-  document.getElementById("nights").textContent = data.nights || "";
-}
-
-function renderReminders(data) {
-  const reminderList = document.getElementById("reminderList");
-  if (!reminderList) return;
-
-  reminderList.innerHTML = "";
-  (data.reminders || []).forEach((text) => {
-    const div = document.createElement("div");
-    div.className = "item-card";
-    div.textContent = text;
-    reminderList.appendChild(div);
-  });
-}
-
-function renderDaySection(data, defaults) {
-  const dayTabs = document.getElementById("dayTabs");
-  const dayContent = document.getElementById("dayContent");
-  if (!dayTabs || !dayContent) return;
-
-  const days = Array.isArray(data.days) ? data.days : [];
-  dayTabs.innerHTML = "";
-
-  let activeKey = days[0]?.key ?? "";
-
-  days.forEach((day, index) => {
-    const btn = document.createElement("button");
-    btn.className = "tab-btn" + (day.key === activeKey ? " active" : "");
-    btn.textContent = dayLabel(day, index);
-    btn.dataset.key = String(day.key);
-    btn.onclick = () => {
-      activeKey = day.key;
-      renderDayContent(days, activeKey, defaults);
-      attachPhotoSliders();
-      detectImageOrientation();
-      syncActiveTab(dayTabs, String(activeKey));
-    };
-    dayTabs.appendChild(btn);
-  });
-
-  renderDayContent(days, activeKey, defaults);
-  attachPhotoSliders();
-  detectImageOrientation();
-  syncActiveTab(dayTabs, String(activeKey));
-}
-
-function renderDayContent(days, activeKey, defaults) {
-  const dayContent = document.getElementById("dayContent");
-  if (!dayContent) return;
-
-  const day = days.find((d) => d.key === activeKey) || days[0];
-  if (!day) {
-    dayContent.innerHTML = `<div class="item-card">${escapeHtml(t("noData"))}</div>`;
-    return;
-  }
-
-  const currentIndex = days.findIndex((d) => d.key === day.key);
-  const stopsHtml = (day.stops || [])
-    .map((stop, idx) => renderStopCard(day, stop, idx, defaults))
-    .join("");
-
-  dayContent.innerHTML = `
-    <div class="day-header">
-      <div class="small muted">${escapeHtml(dayLabel(day, currentIndex))}</div>
-      ${nonEmpty(day.title) ? `<div class="day-header-title">${escapeHtml(day.title)}</div>` : ""}
-      ${nonEmpty(day.theme) ? `<div class="day-header-theme muted">${escapeHtml(day.theme)}</div>` : ""}
-      ${nonEmpty(day.hero) ? `<div class="day-header-hero"><span class="badge">${escapeHtml(t("highlight"))}：${escapeHtml(day.hero)}</span></div>` : ""}
-    </div>
-    <div class="stops">${stopsHtml}</div>
-  `;
-
-  attachMapInteractions();
-  updateActiveStates();
-}
-
-function renderStopCard(day, stop, idx, defaults) {
-  const mapId = `day-${day.key || "day"}-${idx}`;
-  const mapTarget = makeMapTarget(stop);
-
-  const timeText = resolveStopTimeText(stop);
-  const durationText = resolveStopDurationText(stop);
-  const transitText = resolveStopTransitText(stop);
-  const priceText = resolveStopPriceText(stop, defaults);
-  const photosHtml = renderPhotos(stop.photos);
-
-  const title = stop.name || stop.maps_label || `Stop ${idx + 1}`;
-  const address = stop.address?.full?.trim() || stop.address?.short?.trim() || "";
-  const note = stop.note?.trim() || "";
-  const hasMap = nonEmpty(stop.map);
-
-  const metaParts = [
-    timeText ? `<span class="time-pill">${escapeHtml(timeText)}</span>` : "",
-    durationText ? `<span class="pill">${escapeHtml(t("duration"))} ${escapeHtml(durationText)}</span>` : "",
-    nonEmpty(stop.type) ? `<span class="pill">${escapeHtml(stop.type)}</span>` : "",
-    transitText ? `<span class="pill">${escapeHtml(t("transit"))} ${escapeHtml(transitText)}</span>` : "",
-  ].filter(Boolean).join("");
-
-  const extras = renderExtraRows(
-    extraFields(stop, [
-      "id",
-      "start_time",
-      "duration_min",
-      "transit_to_next_min",
-      "name",
-      "maps_label",
-      "type",
-      "price",
-      "address",
-      "note",
-      "map",
-      "highlight",
-      "photos",
-      "show_in_map_info",
-    ])
-  );
-  return `
-    <div class="stop${mapTarget ? " map-target" : ""}"${mapTarget ? ` data-mapid="${escapeHtml(mapId)}"` : ""}>
-      <div class="stop-top">
+    <main class="wrap">
+      <section class="hero">
         <div>
-          <div class="stop-title">
-            ${escapeHtml(title)}
-            ${stop.highlight ? ` <span class="badge">${escapeHtml(t("highlight"))}</span>` : ""}
-          </div>
-          ${metaParts ? `<div class="stop-meta">${metaParts}</div>` : ""}
+          <div class="kicker">Travel Plan</div>
+          <h1 id="title"></h1>
+          <p id="subtitle"></p>
+          <div class="tags" id="tags"></div>
         </div>
-        ${priceText ? `<div class="cost-pill">${escapeHtml(priceText)}</div>` : ""}
-      </div>
-
-      ${address ? `
-        <div class="addr-box">
-          <div class="box">
-            <div class="small muted">Address</div>
-            <div>${escapeHtml(address)}</div>
-          </div>
+        <div class="meta">
+          <div class="box"><span>日期</span><strong id="dates"></strong></div>
+          <div class="box"><span>人數</span><strong id="travelers"></strong></div>
+          <div class="box"><span>預算</span><strong id="budget"></strong></div>
+          <div class="box"><span>住宿</span><strong id="nights"></strong></div>
         </div>
-      ` : ""}
+      </section>
 
-      ${note ? `<div class="stop-note">${escapeHtml(note)}</div>` : ""}
-      ${photosHtml}
-      ${extras}
+      <nav class="main-tabs" id="mainTabs" aria-label="旅遊資訊分頁">
+        <button class="main-tab active" data-main="map">地圖資訊</button>
+        <button class="main-tab" data-main="schedule">時程表</button>
+        <button class="main-tab" data-main="reminders">行前提醒</button>
+        <button class="main-tab" data-main="references">參考網站</button>
+      </nav>
 
-      ${hasMap ? `
-        <div class="actions">
-          ${buildMapButton(mapId)}
-        </div>
-      ` : ""}
-    </div>
+      <section class="panel" id="panel"></section>
+    </main>
   `;
 }
 
-function renderBudgetSection(data, defaults) {
-  const budgetTabs = document.getElementById("budgetTabs");
-  const budgetContent = document.getElementById("budgetContent");
-  if (!budgetTabs || !budgetContent) return;
+function renderHeader() {
+  const data = state.data;
+  $("#title").textContent = data.title;
+  $("#subtitle").textContent = data.subtitle || data.summary || "";
+  $("#dates").textContent = data.dates || "-";
+  $("#travelers").textContent = data.travelers ? `${data.travelers} 人` : "-";
+  $("#budget").textContent = data.budget_per_person ? `${formatMoney(data.budget_per_person)} / 人` : "-";
+  $("#nights").textContent = data.nights || "-";
+  $("#tags").innerHTML = (data.tags || []).map((tag) => `<span class="badge">${esc(tag)}</span>`).join("");
+}
 
-  const items = Array.isArray(data.budget_items) ? data.budget_items : [];
-  const grandTotal = items.reduce((sum, item) => sum + Number(item.value || 0), 0);
-
-  budgetTabs.innerHTML = "";
-  let activeKey = "total";
-
-  const totalBtn = document.createElement("button");
-  totalBtn.className = "tab-btn active";
-  totalBtn.textContent = "Total";
-  totalBtn.dataset.key = "total";
-  totalBtn.onclick = () => {
-    activeKey = "total";
-    renderBudgetContent(items, activeKey, grandTotal, defaults);
-    syncActiveTab(budgetTabs, activeKey);
-  };
-  budgetTabs.appendChild(totalBtn);
-
-  items.forEach((item, index) => {
-    const btn = document.createElement("button");
-    btn.className = "tab-btn";
-    btn.textContent = item.label || `Category ${index + 1}`;
-    btn.dataset.key = item.label || `category-${index + 1}`;
-    btn.onclick = () => {
-      activeKey = btn.dataset.key;
-      renderBudgetContent(items, activeKey, grandTotal, defaults);
-      syncActiveTab(budgetTabs, activeKey);
-    };
-    budgetTabs.appendChild(btn);
+function bindMainTabs() {
+  $$(".main-tab").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.activeMain = button.dataset.main;
+      $$(".main-tab").forEach((b) => b.classList.toggle("active", b === button));
+      renderActivePanel();
+      if (window.matchMedia("(max-width: 700px)").matches) window.scrollTo({ top: 0, behavior: "smooth" });
+    });
   });
-
-  renderBudgetContent(items, activeKey, grandTotal, defaults);
-  syncActiveTab(budgetTabs, activeKey);
+  $(".mobile-menu-btn")?.addEventListener("click", () => $("#mainTabs")?.classList.toggle("open"));
 }
 
-function renderBudgetContent(items, activeKey, grandTotal, defaults) {
-  const budgetContent = document.getElementById("budgetContent");
-  if (!budgetContent) return;
-
-  if (activeKey === "total") {
-    budgetContent.innerHTML = `
-      <div class="item-card">
-        <div class="budget-summary-row">
-          <strong>Total</strong>
-          <span class="badge">${formatMoney(grandTotal, defaults.currency, defaults.locale)}</span>
-        </div>
-        <div class="details-wrap">
-          ${items
-            .map(
-              (item) => `
-                <div class="details-row">
-                  <div><strong>${escapeHtml(item.label || "")}</strong></div>
-                  <div>${formatMoney(item.value || 0, defaults.currency, defaults.locale)}</div>
-                </div>
-              `
-            )
-            .join("")}
-        </div>
-        <div class="summary-box">
-          <div class="summary-box-label small">All categories</div>
-          <div class="summary-box-value">${formatMoney(grandTotal, defaults.currency, defaults.locale)}</div>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  const item =
-    items.find((b, index) => (b.label || `category-${index + 1}`) === activeKey) || items[0];
-
-  if (!item) {
-    budgetContent.innerHTML = `<div class="item-card">${escapeHtml(t("noData"))}</div>`;
-    return;
-  }
-
-  const details = Array.isArray(item.details) ? item.details : [];
-  const detailsSum = details.reduce((sum, d) => sum + Number(d.amount || 0), 0);
-  const pct = grandTotal ? Math.round((Number(item.value || 0) / grandTotal) * 100) : 0;
-
-  budgetContent.innerHTML = `
-    <div class="item-card">
-      <div class="budget-summary-row">
-        <strong>${escapeHtml(item.label || "")}</strong>
-        <span class="badge">${formatMoney(item.value || 0, defaults.currency, defaults.locale)}</span>
-      </div>
-      <div class="budget-bar budget-bar-top-gap"><div style="width:${pct}%"></div></div>
-      <div class="budget-percent small muted">Share: ${pct}%</div>
-      ${
-        details.length
-          ? `
-            <div class="details-wrap">
-              ${details
-                .map(
-                  (d) => `
-                    <div class="details-row">
-                      <div>
-                        <strong>${escapeHtml(d.name || "Item")}</strong>
-                        ${nonEmpty(d.note) ? `<div class="small muted detail-note">${escapeHtml(d.note)}</div>` : ""}
-                      </div>
-                      <div>${formatMoney(d.amount || 0, defaults.currency, defaults.locale)}</div>
-                    </div>
-                  `
-                )
-                .join("")}
-            </div>
-            <div class="summary-box">
-              <div class="summary-box-label small">Details total</div>
-              <div class="summary-box-value">${formatMoney(detailsSum, defaults.currency, defaults.locale)}</div>
-            </div>
-          `
-          : `<div class="small muted budget-empty-note">${escapeHtml(t("noData"))}</div>`
-      }
-    </div>
-  `;
+function renderActivePanel() {
+  if (state.activeMain === "map") return renderMapPanel();
+  if (state.activeMain === "schedule") return renderSchedulePanel();
+  if (state.activeMain === "reminders") return renderRemindersPanel();
+  return renderReferencesPanel();
 }
 
-function renderStaySection(stayGroups) {
-  const stayTabs = document.getElementById("stayTabs");
-  const stayContent = document.getElementById("stayContent");
-  if (!stayTabs || !stayContent) return;
-
-  stayTabs.innerHTML = "";
-  let activeKey = stayGroups[0]?.key || "";
-
-  stayGroups.forEach((group, index) => {
-    const btn = document.createElement("button");
-    btn.className = "tab-btn" + (group.key === activeKey ? " active" : "");
-    btn.textContent = group.label || `Stay ${index + 1}`;
-    btn.dataset.key = group.key;
-    btn.onclick = () => {
-      activeKey = group.key;
-      renderStayContent(stayGroups, activeKey);
-      attachPhotoSliders();
-      detectImageOrientation();
-      syncActiveTab(stayTabs, activeKey);
-    };
-    stayTabs.appendChild(btn);
-  });
-
-  renderStayContent(stayGroups, activeKey);
-  attachPhotoSliders();
-  detectImageOrientation();
-  syncActiveTab(stayTabs, activeKey);
+function addressText(item) {
+  if (typeof item?.address === "string") return item.address;
+  return item?.address?.full || item?.address?.short || item?.short_address || "";
 }
 
-function renderStayContent(stayGroups, activeKey) {
-  const stayContent = document.getElementById("stayContent");
-  if (!stayContent) return;
-
-  const group = stayGroups.find((g) => g.key === activeKey) || stayGroups[0];
-  if (!group) {
-    stayContent.innerHTML = `<div class="item-card">${escapeHtml(t("noData"))}</div>`;
-    return;
-  }
-
-  stayContent.innerHTML =
-    `<div class="list">` +
-    (group.items || []).map((item, idx) => renderStayCard(group, item, idx)).join("") +
-    `</div>`;
-
-  attachMapInteractions();
-  updateActiveStates();
+function timeText(stop) {
+  return stop.start_time || stop.time || "";
 }
 
-function renderStayCard(group, item, idx) {
-  const mapTarget = makeMapTarget(item);
-  const mapId = `stay-${group.key || "stay"}-${idx}`;
-  const photosHtml = renderPhotos(item.photos);
-  const address = item.address?.trim() || "";
-  const hasMap = nonEmpty(item.map);
-
-  const extras = renderExtraRows(
-    extraFields(item, ["area", "name", "note", "link", "map", "address", "photos", "show_in_map_info"])
-  );
-
-  return `
-    <div class="item-card${mapTarget ? " map-target" : ""}"${mapTarget ? ` data-mapid="${escapeHtml(mapId)}"` : ""}>
-      <div class="item-card-top">
-        <strong>${escapeHtml(item.name || "")}</strong>
-        <span class="badge">${escapeHtml(item.area || group.label || "")}</span>
-      </div>
-      ${nonEmpty(item.note) ? `<div class="muted small item-card-note">${escapeHtml(item.note)}</div>` : ""}
-      ${address ? `<div class="extra-row item-card-address"><strong>Address：</strong>${escapeHtml(address)}</div>` : ""}
-      ${photosHtml}
-      ${extras}
-      <div class="actions">
-        ${hasMap ? buildMapButton(mapId) : ""}
-        ${nonEmpty(item.link)
-          ? `<a class="btn secondary" href="${escapeHtml(item.link)}" target="_blank">Open</a>`
-          : ""}
-      </div>
-    </div>
-  `;
+function stopEndTime(stop) {
+  const start = timeToMinute(timeText(stop));
+  if (start === null || typeof stop.duration_min !== "number" || stop.duration_min <= 0) return "";
+  const end = start + stop.duration_min;
+  const hh = String(Math.floor(end / 60) % 24).padStart(2, "0");
+  const mm = String(end % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
 }
 
-function renderShopSection(shopGroups, defaults) {
-  const shopTabs = document.getElementById("shopTabs");
-  const shopContent = document.getElementById("shopContent");
-  if (!shopTabs || !shopContent) return;
-
-  shopTabs.innerHTML = "";
-  let activeKey = shopGroups[0]?.key || "";
-
-  shopGroups.forEach((group, index) => {
-    const btn = document.createElement("button");
-    btn.className = "tab-btn" + (group.key === activeKey ? " active" : "");
-    btn.textContent = group.label || `Info ${index + 1}`;
-    btn.dataset.key = group.key;
-    btn.onclick = () => {
-      activeKey = group.key;
-      renderShopContent(shopGroups, activeKey, defaults);
-      attachPhotoSliders();
-      detectImageOrientation();
-      syncActiveTab(shopTabs, activeKey);
-    };
-    shopTabs.appendChild(btn);
-  });
-
-  renderShopContent(shopGroups, activeKey, defaults);
-  attachPhotoSliders();
-  detectImageOrientation();
-  syncActiveTab(shopTabs, activeKey);
+function timeRangeText(stop) {
+  const start = timeText(stop);
+  const end = stopEndTime(stop);
+  return start && end ? `${start}–${end}` : start;
 }
 
-function renderShopContent(shopGroups, activeKey, defaults) {
-  const shopContent = document.getElementById("shopContent");
-  if (!shopContent) return;
-
-  const group = shopGroups.find((g) => g.key === activeKey) || shopGroups[0];
-  if (!group) {
-    shopContent.innerHTML = `<div class="item-card">${escapeHtml(t("noData"))}</div>`;
-    return;
-  }
-
-  shopContent.innerHTML =
-    `<div class="list">` +
-    (group.items || []).map((item, idx) => renderShopCard(group, item, idx, defaults)).join("") +
-    `</div>`;
-
-  attachMapInteractions();
-  updateActiveStates();
+function normalizeTagName(tag) {
+  const text = String(tag ?? "").trim();
+  if (text === "美食") return "餐飲";
+  return text;
 }
 
-function renderShopCard(group, item, idx, defaults) {
-  const mapTarget = makeMapTarget(item);
-  const mapId = `shop-${group.key || "shop"}-${idx}`;
-  const itemPrice = resolveShopPriceText(item, defaults);
-  const itemPriceOptions = resolveShopPriceOptionsText(item, defaults);
-  const photosHtml = renderPhotos(item.photos);
-  const address = item.address?.trim() || "";
-  const hasMap = nonEmpty(item.map);
-
-  const extras = renderExtraRows(
-    extraFields(item, ["name", "tag", "price", "price_options", "note", "link", "map", "address", "photos", "show_in_map_info"])
-  );
-
-  return `
-    <div class="item-card${mapTarget ? " map-target" : ""}"${mapTarget ? ` data-mapid="${escapeHtml(mapId)}"` : ""}>
-      <div class="item-card-top">
-        <strong>${escapeHtml(item.name || "")}</strong>
-        <span class="badge">${escapeHtml(item.tag || group.label || "Info")}</span>
-      </div>
-      ${itemPrice ? `<div class="item-price">${escapeHtml(itemPrice)}</div>` : ""}
-      ${itemPriceOptions ? `<div class="muted small item-price-options">${escapeHtml(itemPriceOptions)}</div>` : ""}
-      ${nonEmpty(item.note) ? `<div class="muted small item-card-note">${escapeHtml(item.note)}</div>` : ""}
-      ${address ? `<div class="extra-row item-card-address"><strong>Address：</strong>${escapeHtml(address)}</div>` : ""}
-      ${photosHtml}
-      ${extras}
-      <div class="actions">
-        ${hasMap ? buildMapButton(mapId) : ""}
-        ${nonEmpty(item.link)
-          ? `<a class="btn secondary" href="${escapeHtml(item.link)}" target="_blank">Open</a>`
-          : ""}
-      </div>
-    </div>
-  `;
+function tagsForStop(stop) {
+  const tags = [];
+  if (Array.isArray(stop.tags)) tags.push(...stop.tags);
+  if (nonEmpty(stop.type)) tags.push(stop.type);
+  if (stop.highlight) tags.push("重點");
+  return [...new Set(tags.map(normalizeTagName).filter(Boolean))];
 }
 
-function renderMapSection(data, stayGroups, shopGroups, defaults) {
-  const allLocations = collectLocations(data, stayGroups, shopGroups, defaults);
-  state.currentLocations = allLocations;
-
-  const visibleLocations = allLocations.filter((loc) => loc.showInMapInfo);
-  rebuildLocationList(visibleLocations);
-
-  if (visibleLocations.length) {
-    focusMapById(visibleLocations[0].id);
-  } else if (allLocations.length) {
-    focusMapById(allLocations[0].id);
-  } else {
-    renderEmptyMapState();
-  }
-
-  attachMapInteractions();
-  updateActiveStates();
+function allTags(locations) {
+  return [...new Set(locations.flatMap((loc) => loc.tags || []).filter(Boolean))];
 }
 
-function shouldShowInMapInfo(item) {
-  return item?.show_in_map_info !== false;
-}
-
-function collectLocations(data, stayGroups, shopGroups, defaults) {
+function collectLocations() {
+  const data = state.data;
   const locations = [];
-  let seq = 0;
 
+  // 以 JSON days 為主：每日行程 / 所有地點都必須列出 Day 1 ~ Day N 的所有 stop。
+  // 有明確 map/lat/lng 的 stop 才進入「地點收藏夾」與地圖切換。
   (data.days || []).forEach((day, dayIndex) => {
     (day.stops || []).forEach((stop, stopIndex) => {
-      const map = makeMapTarget(stop);
-      if (!map) return;
-
-      const timeText = resolveStopTimeText(stop);
-      const priceText = resolveStopPriceText(stop, defaults);
-
+      const explicitMap = nonEmpty(stop.map) || typeof stop.lat === "number" || typeof stop.lng === "number";
+      const url = explicitMap ? mapUrl(stop) : "";
+      const tags = tagsForStop(stop);
       locations.push({
-        id: `day-${day.key || dayIndex}-${stopIndex}`,
-        map,
-        source: `${t("itinerary")} / ${dayLabel(day, dayIndex)}`,
-        title: stop.maps_label || stop.name || "Place",
-        subtitle: [stop.type, timeText, priceText].filter(Boolean).join("｜"),
-        address: stop.address?.short || stop.address?.full || "",
-        order: seq++,
-        showInMapInfo: shouldShowInMapInfo(stop),
+        id: `day-${String(day.key).replace(/[^a-zA-Z0-9_-]/g, "_")}-${stopIndex + 1}`,
+        source: "day",
+        group: "每日行程",
+        dayKey: day.key,
+        dayLabel: dayLabel(day, dayIndex),
+        dayTitle: day.title || day.theme || "",
+        order: stopIndex + 1,
+        title: stop.maps_label || stop.name,
+        name: stop.name || stop.maps_label || "未命名行程",
+        time: timeText(stop),
+        timeRange: timeRangeText(stop),
+        duration: durationText(stop.duration_min),
+        transit: durationText(stop.transit_to_next_min),
+        next: stop.next || "",
+        type: normalizeTagName(stop.type || ""),
+        tags,
+        subtitle: [timeRangeText(stop), normalizeTagName(stop.type || ""), priceText(stop.price)].filter(Boolean).join("｜"),
+        address: addressText(stop),
+        note: stop.note || "",
+        price: priceText(stop.price),
+        highlight: Boolean(stop.highlight),
+        url,
+        hasMap: explicitMap,
       });
     });
   });
 
-  stayGroups.forEach((group, groupIndex) => {
-    (group.items || []).forEach((item, itemIndex) => {
-      const map = makeMapTarget(item);
-      if (!map) return;
-
-      locations.push({
-        id: `stay-${group.key || groupIndex}-${itemIndex}`,
-        map,
-        source: `${t("stays")} / ${group.label || "Stay"}`,
-        title: item.name || "Stay",
-        subtitle: item.note || "",
-        address: item.address || item.area || "",
-        order: seq++,
-        showInMapInfo: shouldShowInMapInfo(item),
-      });
+  // 住宿 / shops 只作為地圖收藏夾補充來源；「所有地點」仍以行程 days 為主。
+  normalizeStayGroups(data).forEach((group, gi) => group.items.forEach((item, ii) => {
+    const explicitMap = nonEmpty(item.map) || typeof item.lat === "number" || typeof item.lng === "number";
+    if (!explicitMap || item.show_in_map_info === false) return;
+    const url = mapUrl(item);
+    const tag = normalizeTagName(item.area || group.label || "住宿");
+    locations.push({
+      id: `stay-${gi + 1}-${ii + 1}`,
+      source: "stay",
+      group: "住宿",
+      label: group.label,
+      title: item.name,
+      name: item.name,
+      type: "住宿",
+      tags: ["住宿", tag].filter(Boolean),
+      subtitle: [group.label, item.note].filter(Boolean).join("｜"),
+      address: item.address || item.area || "",
+      note: item.note || "",
+      url,
+      hasMap: true,
     });
-  });
+  }));
 
-  shopGroups.forEach((group, groupIndex) => {
-    (group.items || []).forEach((item, itemIndex) => {
-      const map = makeMapTarget(item);
-      if (!map) return;
-
-      const itemPrice =
-        resolveShopPriceText(item, defaults) || resolveShopPriceOptionsText(item, defaults);
-
-      locations.push({
-        id: `shop-${group.key || groupIndex}-${itemIndex}`,
-        map,
-        source: `${t("shops")} / ${group.label || "Info"}`,
-        title: item.name || "Shop",
-        subtitle: [item.tag, itemPrice, item.note].filter(Boolean).join("｜"),
-        address: item.address || "",
-        order: seq++,
-        showInMapInfo: shouldShowInMapInfo(item),
-      });
+  normalizeShopGroups(data).forEach((group, gi) => group.items.forEach((item, ii) => {
+    const explicitMap = nonEmpty(item.map) || typeof item.lat === "number" || typeof item.lng === "number";
+    if (!explicitMap || item.show_in_map_info === false) return;
+    const url = mapUrl(item);
+    const primaryTag = normalizeTagName(item.type || item.tag || group.label || "資訊");
+    const tags = [primaryTag, normalizeTagName(group.label)].filter(Boolean);
+    locations.push({
+      id: `shop-${gi + 1}-${ii + 1}`,
+      source: "shop",
+      group: "資訊",
+      label: group.label,
+      title: item.name,
+      name: item.name,
+      type: primaryTag,
+      tags: [...new Set(tags)],
+      subtitle: [primaryTag, priceText(item.price), item.note].filter(Boolean).join("｜"),
+      address: item.address || "",
+      note: item.note || "",
+      price: priceText(item.price),
+      url,
+      hasMap: true,
     });
-  });
-
+  }));
   return locations;
 }
 
-function rebuildLocationList(locations) {
-  const box = document.getElementById("locationList");
+function renderMapPanel() {
+  const days = state.data.days || [];
+  const locations = collectLocations();
+  const first = locations.find((l) => l.hasMap) || locations[0];
+  if (!state.currentMapId && first?.hasMap) state.currentMapId = first.id;
+  if (!state.activeDetailId && locations[0]) state.activeDetailId = locations[0].id;
+  const active = locations.find((l) => l.id === state.currentMapId && l.hasMap) || locations.find((l) => l.hasMap);
+
+  $("#panel").innerHTML = `
+    <div class="map-layout">
+      <aside class="map-side">
+        <div class="sub-tabs" id="mapSubTabs">
+          <button class="sub-tab ${state.activeMapSub === "days" ? "active" : ""}" data-sub="days">每日行程</button>
+          <button class="sub-tab ${state.activeMapSub === "all" ? "active" : ""}" data-sub="all">所有地點</button>
+          <button class="sub-tab ${state.activeMapSub === "saved" ? "active" : ""}" data-sub="saved">地點收藏夾</button>
+        </div>
+        <div id="mapList"></div>
+      </aside>
+      <section class="map-frame-card">
+        <iframe id="mapFrame" src="${esc(active ? embedUrl(active.url) : fallbackMapEmbedUrl())}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div class="map-focus" id="mapFocus">${active ? renderMapFocus(active) : `<span class="muted">尚未選擇地點</span>`}</div>
+      </section>
+    </div>
+  `;
+
+  $$(".sub-tab").forEach((button) => button.addEventListener("click", () => { state.activeMapSub = button.dataset.sub; state.activeTag = "__all__"; renderMapPanel(); }));
+  renderMapList(locations, days);
+}
+
+function renderMapFocus(loc) {
+  return renderDetailCard(loc, relatedDayLocations(loc), { compact: true, mapFocus: true });
+}
+
+function relatedDayLocations(loc) {
+  const locations = collectLocations();
+  return loc?.dayKey !== undefined ? locations.filter((x) => x.dayKey === loc.dayKey && x.source === "day") : [];
+}
+
+function renderMapList(locations, days) {
+  const box = $("#mapList");
   if (!box) return;
-
-  box.innerHTML = "";
-
-  locations.forEach((loc) => {
-    const div = document.createElement("div");
-    div.className = "location";
-    div.dataset.mapid = loc.id;
-    div.innerHTML = `
-      <div class="loc-title">${escapeHtml(loc.title)}</div>
-      ${nonEmpty(loc.address) ? `<div class="loc-sub">${escapeHtml(loc.address)}</div>` : ""}
-    `;
-    div.addEventListener("click", () => focusMapById(loc.id));
-    box.appendChild(div);
-  });
+  if (state.activeMapSub === "days") box.innerHTML = renderDailyItinerary(locations, days);
+  else if (state.activeMapSub === "all") box.innerHTML = renderAllPlaces(locations);
+  else box.innerHTML = renderFavoritePlaces(locations);
+  bindMapListEvents(locations);
 }
 
-function renderEmptyMapState() {
-  const mapFrame = document.getElementById("mapFrame");
-  const mapFocus = document.getElementById("mapFocus");
-  const box = document.getElementById("locationList");
-
-  if (box) box.innerHTML = "";
-  if (mapFrame) mapFrame.src = embedUrl("Taiwan");
-  if (mapFocus) {
-    mapFocus.innerHTML = `<div class="muted">${escapeHtml(t("noData"))}</div>`;
-  }
-}
-
-function focusMapById(mapId) {
-  const item = state.currentLocations.find((x) => x.id === mapId);
-  if (!item) return;
-
-  state.currentMapId = mapId;
-
-  const mapFrame = document.getElementById("mapFrame");
-  const mapFocus = document.getElementById("mapFocus");
-
-  if (mapFrame) mapFrame.src = embedUrl(item.map);
-
-  if (mapFocus) {
-    mapFocus.innerHTML = `
-      <div class="small muted">${escapeHtml(item.source)}</div>
-      <h3>${escapeHtml(item.title)}</h3>
-      ${nonEmpty(item.subtitle) ? `<div class="map-focus-subtitle muted">${escapeHtml(item.subtitle)}</div>` : ""}
-      ${nonEmpty(item.address) ? `<div class="map-focus-address"><strong>Address：</strong>${escapeHtml(item.address)}</div>` : ""}
-      <div class="actions">
-        <a class="btn secondary" href="${escapeHtml(item.map)}" target="_blank" rel="noopener noreferrer">Open Google Maps</a>
+function renderDailyItinerary(locations, days) {
+  const activeDay = days.find((d) => d.key === state.activeDay) || days[0];
+  if (!activeDay) return `<div class="empty">尚無每日行程</div>`;
+  const dayIndex = days.findIndex((d) => d.key === activeDay.key);
+  const dayLocations = locations.filter((loc) => loc.source === "day" && loc.dayKey === activeDay.key);
+  const activeDetail = dayLocations.find((loc) => loc.id === state.activeDetailId) || dayLocations[0];
+  if (activeDetail && state.activeDetailId !== activeDetail.id) state.activeDetailId = activeDetail.id;
+  return `
+    <div class="day-tabs">${days.map((day, index) => `
+      <button class="day-tab ${day.key === activeDay.key ? "active" : ""}" data-day-key="${esc(day.key)}">${esc(dayLabel(day, index))}</button>`).join("")}</div>
+    <article class="day-summary-card">
+      <div class="small muted">${esc(dayLabel(activeDay, dayIndex))}</div>
+      <h2>${esc(activeDay.title || dayLabel(activeDay, dayIndex))}</h2>
+      ${activeDay.theme ? `<p>${esc(activeDay.theme)}</p>` : ""}
+      ${activeDay.hero ? `<span class="badge">重點：${esc(activeDay.hero)}</span>` : ""}
+      <button class="map-all-day-btn" type="button" data-map-day="${esc(activeDay.key)}">🛫 將當日全部地點顯示在地圖上</button>
+      <div class="outline-block">
+        <div class="outline-title">▼ 本日行程（${dayLocations.length}）</div>
+        <div class="outline-list">${dayLocations.map(renderOutlineItem).join("") || `<div class="empty compact">此日沒有行程</div>`}</div>
       </div>
-    `;
+    </article>
+  `;
+}
+
+function renderOutlineItem(loc) {
+  return `
+    <button class="outline-item ${loc.id === state.activeDetailId ? "active" : ""}" data-detail-id="${esc(loc.id)}"${loc.hasMap ? ` data-mapid="${esc(loc.id)}"` : ""}>
+      <span class="outline-num">${esc(loc.order || "")}</span>
+      ${loc.timeRange ? `<span class="outline-time">${esc(loc.timeRange)}</span>` : ""}
+      <span class="outline-name">${esc(loc.name)}</span>
+      ${loc.type ? `<span class="outline-type">${esc(loc.type)}</span>` : ""}
+    </button>
+  `;
+}
+
+function renderDetailCard(loc, dayLocations = [], options = {}) {
+  const next = loc.next || dayLocations.find((x) => x.order === loc.order + 1)?.name || "";
+  const detailTags = (loc.tags || []).filter((tag) => tag !== "重點");
+  return `
+    <article class="detail-card ${options.mapFocus ? "map-focus-detail" : ""} ${loc.id === state.activeDetailId ? "active-map" : ""}" data-detail-id="${esc(loc.id)}"${loc.hasMap ? ` data-mapid="${esc(loc.id)}"` : ""}>
+      <h2>${esc(loc.name)}</h2>
+      <div class="detail-meta">
+        ${loc.timeRange ? `<span class="time-pill">${esc(loc.timeRange)}</span>` : ""}
+        ${loc.duration ? `<span class="pill">${esc(loc.duration)}</span>` : ""}
+        ${loc.price ? `<span class="pill">${esc(loc.price)}</span>` : ""}
+      </div>
+      ${detailTags.length ? `<div class="tag-list">${detailTags.map((tag) => `<span class="tag-chip">${esc(tag)}</span>`).join("")}</div>` : ""}
+      ${loc.address ? `<div class="addr-box"><div class="small muted">地址</div><div>${esc(loc.address)}</div></div>` : ""}
+      ${loc.note ? `<p class="detail-note">${esc(loc.note)}</p>` : ""}
+      ${!loc.hasMap ? `<div class="map-missing-note">尚未填寫地圖位置，右方暫顯示小琉球區域且不顯示 marker。</div>` : ""}
+      ${loc.hasMap ? `<a class="btn secondary detail-map-btn" href="${esc(loc.url)}" target="_blank" rel="noopener noreferrer">開啟 Google Maps</a>` : ""}
+      ${next ? `<button class="next-btn" type="button" data-next-title="${esc(next)}">下一站：${esc(next)}</button>` : ""}
+    </article>
+  `;
+}
+
+function renderTagFilters(tags, activeTag = state.activeTag || "__all__") {
+  return `
+    <div class="tag-filter">
+      <button class="tag-filter-btn ${activeTag === "__all__" ? "active" : ""}" data-tag="__all__">全部</button>
+      ${tags.map((tag) => `<button class="tag-filter-btn ${activeTag === tag ? "active" : ""}" data-tag="${esc(tag)}">${esc(tag)}</button>`).join("")}
+    </div>
+  `;
+}
+
+function filterByActiveTag(locations) {
+  const activeTag = state.activeTag || "__all__";
+  if (activeTag === "__all__") return locations;
+  return locations.filter((loc) => (loc.tags || []).includes(activeTag) || loc.type === activeTag);
+}
+
+function renderAllPlaces(locations) {
+  const candidates = locations.filter((loc) => loc.source === "day");
+  const tags = allTags(candidates);
+  const filtered = filterByActiveTag(candidates);
+  const active = filtered.find((loc) => loc.id === state.activeDetailId) || filtered[0];
+  return `
+    ${renderTagFilters(tags)}
+    <div class="favorite-list all-place-list">${filtered.map(renderPlaceListItem).join("") || `<div class="empty">此分類沒有地點</div>`}</div>
+  `;
+}
+
+function renderPlaceListItem(loc) {
+  return `
+    <button class="favorite-item all-place-item ${loc.id === state.activeDetailId ? "active" : ""}" data-detail-id="${esc(loc.id)}"${loc.hasMap ? ` data-mapid="${esc(loc.id)}"` : ""}>
+      <span>${esc(loc.name)}</span>
+      ${loc.type ? `<small>${esc(loc.type)}</small>` : loc.tags?.[0] ? `<small>${esc(loc.tags[0])}</small>` : ""}
+    </button>
+  `;
+}
+
+function renderFavoritePlaces(locations) {
+  const candidates = locations.filter((loc) => loc.hasMap && nonEmpty(loc.url));
+  const tags = allTags(candidates);
+  const filtered = filterByActiveTag(candidates);
+  const active = filtered.find((loc) => loc.id === state.activeDetailId) || filtered.find((loc) => loc.id === state.currentMapId) || filtered[0];
+  return `
+    ${renderTagFilters(tags)}
+    <div class="favorite-list">${filtered.map((loc) => `
+      <button class="favorite-item ${loc.id === state.currentMapId || loc.id === state.activeDetailId ? "active" : ""}" data-mapid="${esc(loc.id)}" data-detail-id="${esc(loc.id)}">
+        <span>${esc(loc.title || loc.name)}</span>
+        ${loc.type ? `<small>${esc(loc.type)}</small>` : loc.tags?.[0] ? `<small>${esc(loc.tags[0])}</small>` : ""}
+      </button>`).join("") || `<div class="empty">尚無可顯示地點</div>`}</div>
+  `;
+}
+
+function bindMapListEvents(locations) {
+  $$('[data-day-key]').forEach((el) => el.addEventListener('click', () => {
+    state.activeDay = Number.isNaN(Number(el.dataset.dayKey)) ? el.dataset.dayKey : Number(el.dataset.dayKey);
+    state.activeDetailId = "";
+    renderMapPanel();
+  }));
+  $$('[data-tag]').forEach((el) => el.addEventListener('click', () => {
+    state.activeTag = el.dataset.tag;
+    renderMapPanel();
+  }));
+  $$('[data-detail-id]').forEach((el) => el.addEventListener('click', () => {
+    state.activeDetailId = el.dataset.detailId;
+    focusLocation(el.dataset.detailId, locations);
+    if (state.activeMapSub === "days" || state.activeMapSub === "all") renderMapList(locations, state.data.days || []);
+  }));
+  $$('[data-mapid]:not([data-detail-id])').forEach((el) => el.addEventListener('click', () => {
+    focusMap(el.dataset.mapid, locations);
+  }));
+  $$('[data-map-day]').forEach((el) => el.addEventListener('click', () => {
+    const firstOfDay = locations.find((loc) => String(loc.dayKey) === String(el.dataset.mapDay) && loc.hasMap);
+    if (firstOfDay) focusMap(firstOfDay.id, locations);
+  }));
+}
+
+function focusLocation(id, locations) {
+  const loc = locations.find((x) => x.id === id);
+  if (!loc) return;
+
+  const frame = $("#mapFrame");
+  const focus = $("#mapFocus");
+
+  state.activeDetailId = id;
+  if (loc.hasMap) {
+    state.currentMapId = id;
+    if (frame) frame.src = embedUrl(loc.url);
+  } else {
+    state.currentMapId = "";
+    if (frame) frame.src = fallbackMapEmbedUrl();
   }
 
-  updateActiveStates();
-}
-
-function updateActiveStates() {
-  document.querySelectorAll("[data-mapid]").forEach((el) => {
-    if (el.classList.contains("map-switch-btn")) return;
-    el.classList.toggle("active-map", el.dataset.mapid === state.currentMapId);
-  });
-
-  document.querySelectorAll(".location").forEach((el) => {
-    el.classList.toggle("active", el.dataset.mapid === state.currentMapId);
+  if (focus) focus.innerHTML = renderMapFocus(loc);
+  $$(".location,.outline-item,.place-card,.favorite-item,.detail-card").forEach((el) => {
+    const active = el.dataset.detailId === id || (loc.hasMap && el.dataset.mapid === id);
+    el.classList.toggle("active-map", active);
+    el.classList.toggle("active", active);
   });
 }
 
-function attachMapInteractions() {
-  document.querySelectorAll(".map-target").forEach((card) => {
-    card.addEventListener("click", (event) => {
-      if (event.target.closest("a")) return;
+function focusMap(id, locations) {
+  focusLocation(id, locations);
+}
 
-      const btn = event.target.closest(".map-switch-btn");
-      if (btn) {
-        focusMapById(btn.dataset.mapid);
-        event.stopPropagation();
-        return;
-      }
+function scheduleRows() {
+  const rows = [];
+  for (let minute = 6 * 60; minute <= 24 * 60 + 30; minute += 30) {
+    const h24 = Math.floor(minute / 60);
+    const hh = String(h24 % 24).padStart(2, "0");
+    const mm = String(minute % 60).padStart(2, "0");
+    rows.push({ minute, label: `${hh}:${mm}`, half: mm === "30" });
+  }
+  return rows;
+}
 
-      const id = card.dataset.mapid;
-      if (id) focusMapById(id);
+function schedulePeriodCell(rowIndex) {
+  if (rowIndex === 0) return `<td class="period-cell period-morning" rowspan="14">早</td>`;
+  if (rowIndex === 14) return `<td class="period-cell period-afternoon" rowspan="12">午</td>`;
+  if (rowIndex === 26) return `<td class="period-cell period-night" rowspan="12">晚</td>`;
+  return "";
+}
+
+function timeToMinute(value) {
+  if (!nonEmpty(value)) return null;
+  const match = String(value).trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return null;
+  let h = Number(match[1]);
+  const m = Number(match[2]);
+  if (!Number.isFinite(h) || !Number.isFinite(m) || m < 0 || m > 59) return null;
+  if (h < 6) h += 24;
+  return h * 60 + m;
+}
+
+function buildScheduleMatrix(days, rows) {
+  const start = rows[0]?.minute ?? 360;
+  const last = rows[rows.length - 1]?.minute ?? 1470;
+  return days.map((day) => {
+    const cells = Array(rows.length).fill(null);
+    (day.stops || []).forEach((stop) => {
+      const minute = timeToMinute(stop.start_time || stop.time);
+      if (minute === null || minute < start || minute > last) return;
+      let row = Math.round((minute - start) / 30);
+      if (row < 0 || row >= rows.length) return;
+      while (row < rows.length && cells[row]?.covered) row += 1;
+      if (row >= rows.length) return;
+      const duration = typeof stop.duration_min === "number" && stop.duration_min > 0 ? stop.duration_min : 30;
+      const span = Math.max(1, Math.min(rows.length - row, Math.ceil(duration / 30)));
+      cells[row] = { stop, span };
+      for (let i = 1; i < span; i += 1) cells[row + i] = { covered: true };
     });
-  });
-
-  document.querySelectorAll(".map-switch-btn").forEach((btn) => {
-    btn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      focusMapById(btn.dataset.mapid);
-    });
+    return cells;
   });
 }
 
-function attachPhotoSliders() {
-  document.querySelectorAll(".photo-slider").forEach((slider) => {
-    const track = slider.querySelector(".slider-track");
-    const buttons = slider.querySelectorAll(".slider-btn");
-    const slide = track?.querySelector(".slide");
-
-    if (!track || !slide || buttons.length === 0) return;
-
-    buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const dir = Number(btn.dataset.dir);
-        track.scrollBy({
-          left: dir * slide.clientWidth,
-          behavior: "smooth",
-        });
-      });
-    });
-  });
+function renderScheduleCell(cell) {
+  if (!cell) return `<td class="schedule-empty"></td>`;
+  if (cell.covered) return "";
+  const stop = cell.stop;
+  const start = stop.start_time || stop.time || "";
+  const end = stopEndTime(stop);
+  const range = start && end ? `${start}–${end}` : start;
+  return `
+    <td class="schedule-stop-cell" rowspan="${cell.span}">
+      <div class="schedule-stop-name">${esc(stop.name || stop.maps_label || "未命名行程")}</div>
+      <div class="schedule-stop-time">${esc(range)}</div>
+    </td>`;
 }
 
-function detectImageOrientation() {
-  document.querySelectorAll(".slide img").forEach((img) => {
-    const apply = () => {
-      const ratio = img.naturalWidth / img.naturalHeight;
-      img.classList.remove("portrait", "landscape");
-      if (ratio < 1) {
-        img.classList.add("portrait");
-      } else {
-        img.classList.add("landscape");
-      }
-    };
+function renderSchedulePanel() {
+  const days = state.data.days || [];
+  const rows = scheduleRows();
+  const matrix = buildScheduleMatrix(days, rows);
 
-    if (img.complete) {
-      apply();
-    } else {
-      img.onload = apply;
-    }
-  });
-}
-
-function renderValidationError(errors, defaultLocale = "zh-TW") {
-  const app = document.getElementById("app");
-  if (!app) return;
-
-  const locale = resolveLocale(defaultLocale);
-  state.i18n = createI18n(locale);
-
-  app.innerHTML = `
-    <div class="wrap">
-      <div class="card">
-        <div class="section-head">
-          <h2>${escapeHtml(t("dataError"))}</h2>
-        </div>
-        <div class="section-body">
-          <div class="error-box">
-            <strong>trip.json validation failed</strong><br>
-            ${errors.map((e) => `- ${escapeHtml(e)}`).join("<br>")}
-          </div>
-        </div>
+  $("#panel").innerHTML = `
+    <div class="schedule-card">
+      <div class="schedule-scroll">
+        <table class="schedule-table timeline-table" aria-label="旅遊時程表">
+          <colgroup>
+            <col class="col-period" />
+            <col class="col-time" />
+            ${days.map(() => `<col class="col-day" />`).join("")}
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="period-head">時段</th>
+              <th class="time-head">時刻</th>
+              ${days.map((day, index) => `
+                <th class="day-head">
+                  <div class="day-head-label">${esc(dayLabel(day, index))}</div>
+                  <div class="day-head-title">${esc(day.title || day.theme || "")}</div>
+                </th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((row, rowIndex) => `
+              <tr>
+                ${schedulePeriodCell(rowIndex)}
+                <td class="time-cell ${row.half ? "half" : "whole"}">${esc(row.label)}</td>
+                ${days.map((_, dayIndex) => renderScheduleCell(matrix[dayIndex][rowIndex])).join("")}
+              </tr>`).join("")}
+          </tbody>
+        </table>
       </div>
     </div>
   `;
+}
+
+function reminderText(item) {
+  if (typeof item === "string") return item;
+  if (item && typeof item === "object") return item.text || item.title || item.name || "";
+  return String(item ?? "");
+}
+
+function renderReminderItem(item, index) {
+  const text = reminderText(item);
+  return `
+    <div class="outline-item reminder-item">
+      <span class="outline-num">${index + 1}</span>
+      <span class="outline-name">${esc(text)}</span>
+    </div>`;
+}
+
+function renderBudgetTabs(items) {
+  const active = state.activeBudgetCategory || "__total__";
+  return `
+    <div class="budget-tabs">
+      <button class="tag-filter-btn ${active === "__total__" ? "active" : ""}" data-budget-tag="__total__">Total</button>
+      ${items.map((item) => `<button class="tag-filter-btn ${active === item.label ? "active" : ""}" data-budget-tag="${esc(item.label)}">${esc(item.label)}</button>`).join("")}
+    </div>`;
+}
+
+function renderBudgetSummary(items) {
+  const active = state.activeBudgetCategory || "__total__";
+  const total = items.reduce((sum, item) => sum + Number(item.value || 0), 0);
+  if (active === "__total__") {
+    return `
+      ${renderBudgetTabs(items)}
+      <div class="budget-total-card">
+        <div class="budget-summary-row"><strong>Total</strong><span>${formatMoney(total)}</span></div>
+        ${items.map((item) => `<div class="details-row"><strong>${esc(item.label)}</strong><span>${formatMoney(item.value)}</span></div>`).join("")}
+        <div class="summary-box"><div class="small">Details total</div><strong>${formatMoney(total)}</strong></div>
+      </div>`;
+  }
+  const item = items.find((x) => x.label === active) || items[0];
+  if (!item) return `<div class="empty">尚無預算資料</div>`;
+  const details = Array.isArray(item.details) ? item.details : [];
+  const value = Number(item.value || 0);
+  const share = total ? Math.round((value / total) * 100) : 0;
+  return `
+    ${renderBudgetTabs(items)}
+    <div class="budget-total-card">
+      <div class="budget-summary-row"><strong>${esc(item.label)}</strong><span>${formatMoney(value)}</span></div>
+      <div class="budget-bar"><div style="width:${Math.max(0, Math.min(100, share))}%"></div></div>
+      <div class="small muted budget-share">Share: ${share}%</div>
+      <div class="details-wrap">
+        ${details.map((d) => `<div class="details-row"><strong>${esc(d.name || "細項")}</strong><span>${formatMoney(d.amount)}</span></div>`).join("") || `<div class="empty compact">沒有細項</div>`}
+      </div>
+      <div class="summary-box"><div class="small">Details total</div><strong>${formatMoney(value)}</strong></div>
+    </div>`;
+}
+
+function renderRemindersPanel() {
+  const reminders = state.data.reminders || [];
+  const budgetItems = state.data.budget_items || [];
+  if (!state.activeBudgetCategory) state.activeBudgetCategory = "__total__";
+  $("#panel").innerHTML = `
+    <div class="reminder-grid reminder-grid-two">
+      <section class="info-card"><h2>行前提醒</h2><div class="outline-list reminder-list">${reminders.map(renderReminderItem).join("") || `<div class="empty">尚無提醒</div>`}</div></section>
+      <section class="info-card"><h2>預算摘要</h2>${renderBudgetSummary(budgetItems)}</section>
+    </div>
+  `;
+  $$('[data-budget-tag]').forEach((btn) => btn.addEventListener('click', () => {
+    state.activeBudgetCategory = btn.dataset.budgetTag;
+    renderRemindersPanel();
+  }));
+}
+
+function renderReferenceItem(ref, index) {
+  const url = ref.url || "#";
+  return `
+    <a class="outline-item reference-item" href="${esc(url)}" target="_blank" rel="noopener noreferrer">
+      <span class="outline-num">${index + 1}</span>
+      <span class="outline-name">${esc(ref.title || ref.url || "參考網站")}</span>
+      ${ref.type || ref.source ? `<span class="outline-type">${esc(ref.type || ref.source)}</span>` : ""}
+    </a>`;
+}
+
+function renderReferencesPanel() {
+  const refs = state.data.references || [];
+  const shopRefs = (state.data.shops || []).filter((s) => s.link).map((s) => ({ title: s.name, url: s.link, source: normalizeTagName(s.tag || "資訊") }));
+  const all = [...refs, ...shopRefs];
+  $("#panel").innerHTML = `
+    <section class="info-card reference-panel-card">
+      <div class="card-head"><h2>參考網站</h2><span>${all.length} 筆</span></div>
+      <div class="outline-list reference-list-itemized">
+        ${all.map(renderReferenceItem).join("") || `<div class="empty">尚無參考網站</div>`}
+      </div>
+    </section>
+  `;
+}
+
+function renderValidationError(errors) {
+  const app = document.getElementById("app");
+  if (!app) return;
+  app.innerHTML = `<main class="wrap"><section class="validation-error"><h1>JSON 格式驗證失敗</h1><p>請先修正以下欄位：</p><pre>${esc(errors.join("\n"))}</pre></section></main>`;
 }
