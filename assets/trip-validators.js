@@ -104,6 +104,22 @@ export function validateTripData(data) {
   });
   if (data.tags !== undefined && (!Array.isArray(data.tags) || data.tags.some((x) => typeof x !== "string"))) errors.push("tags 必須是字串陣列");
   if (data.defaults !== undefined && !isObject(data.defaults)) pushType(errors, "defaults", "object");
+  if (data.lat !== undefined && typeof data.lat !== "number") pushType(errors, "lat", "數字");
+  if (data.lng !== undefined && typeof data.lng !== "number") pushType(errors, "lng", "數字");
+  if (isObject(data.defaults)) {
+    const center = data.defaults.map_center ?? data.defaults.map_default_center;
+    const centerPath = data.defaults.map_center !== undefined ? "defaults.map_center" : "defaults.map_default_center";
+    if (center !== undefined) {
+      if (!isObject(center)) pushType(errors, centerPath, "object");
+      else {
+        if (center.lat !== undefined && typeof center.lat !== "number") pushType(errors, `${centerPath}.lat`, "數字");
+        if (center.lng !== undefined && typeof center.lng !== "number") pushType(errors, `${centerPath}.lng`, "數字");
+        if (center.zoom !== undefined && typeof center.zoom !== "number") pushType(errors, `${centerPath}.zoom`, "數字");
+      }
+    }
+    if (data.defaults.map_zoom !== undefined && typeof data.defaults.map_zoom !== "number") pushType(errors, "defaults.map_zoom", "數字");
+    if (data.defaults.map_default_zoom !== undefined && typeof data.defaults.map_default_zoom !== "number") pushType(errors, "defaults.map_default_zoom", "數字");
+  }
   if (data.budget_items !== undefined) {
     if (!Array.isArray(data.budget_items)) pushType(errors, "budget_items", "陣列");
     else data.budget_items.forEach((item, i) => validateBudgetItem(item, `budget_items[${i}]`, errors));

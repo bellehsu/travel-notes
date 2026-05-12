@@ -6,20 +6,6 @@
   "subtitle": "Travel planning with food, itinerary and tools",
   "trips": [
     {
-      "slug": "busan-5d4n-202610",
-      "title": "釜山美食 × 購物 5日行程",
-      "summary": "適合秋季安排的釜山自由行版本，重點放在吃、逛與比較舒服的城市節奏。",
-      "coverImage": "",
-      "days": 5,
-      "nights": 4,
-      "tags": [
-        "food",
-        "shopping",
-        "autumn",
-        "busan"
-      ]
-    },
-    {
       "slug": "xiaoliuqiu-4d3n-202605",
       "title": "小琉球 4天3夜",
       "summary": "海島體驗行程，包含浮潛、水肺、SUP、東港黑鮪魚與大鵬灣散步。",

@@ -19,7 +19,7 @@ function toNumberOrUndefined(value) {
   return Number.isFinite(n) ? n : undefined;
 }
 
-function timeToMinutes(value) {
+export function timeToMinutes(value) {
   const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})$/);
   if (!match) return undefined;
   const h = Number(match[1]);
@@ -59,19 +59,39 @@ function normalizePhotos(photos) {
 function normalizePrice(price) {
   if (price === "" || price === undefined || price === null) return undefined;
   if (typeof price === "string") return { kind: "text", text: price };
-  if (typeof price === "number") return { kind: "fixed", amount: price };
+  if (typeof price === "number") return { kind: "fixed", amount: price, min: price };
   if (!isObject(price)) return undefined;
 
   const out = { ...price };
+  const min = toNumberOrUndefined(out.min);
+  const max = toNumberOrUndefined(out.max);
+  const amount = toNumberOrUndefined(out.amount);
+
+  if (min !== undefined) out.min = min;
+  if (max !== undefined) out.max = max;
+  if (amount !== undefined) out.amount = amount;
+
+  // 新規格：price 不需要 kind。固定價格放 min，max 可省略。
   if (!out.kind) {
-    if (typeof out.amount === "number") out.kind = "fixed";
-    else if (typeof out.min === "number" || typeof out.max === "number") out.kind = "range";
-    else out.kind = "free";
+    if (amount !== undefined && min === undefined && max === undefined) {
+      out.kind = "fixed";
+      out.min = amount;
+    } else if (min !== undefined && max === undefined) {
+      out.kind = "fixed";
+      out.amount = min;
+    } else if (min !== undefined || max !== undefined) {
+      out.kind = "range";
+    } else {
+      out.kind = "free";
+    }
+  } else if (out.kind === "fixed" && amount === undefined && min !== undefined) {
+    out.amount = min;
   }
   return out;
 }
 
 function normalizeAddress(address, legacyShortAddress) {
+  // address 可省略；可為 string 或 { short, full }。
   if (isObject(address)) {
     return {
       short: toString(address.short),
@@ -171,7 +191,17 @@ export function normalizeTripData(data = {}) {
       currency: toString(defaults.currency) || "TWD",
       locale: toString(defaults.locale) || "zh-TW",
       price_unit: toString(defaults.price_unit) || "per_person",
+      map_center: isObject(defaults.map_center)
+        ? { lat: toNumberOrUndefined(defaults.map_center.lat), lng: toNumberOrUndefined(defaults.map_center.lng), zoom: toNumberOrUndefined(defaults.map_center.zoom) || 13 }
+        : (isObject(defaults.map_default_center)
+          ? { lat: toNumberOrUndefined(defaults.map_default_center.lat), lng: toNumberOrUndefined(defaults.map_default_center.lng), zoom: toNumberOrUndefined(defaults.map_default_zoom) || 13 }
+          : (toNumberOrUndefined(data.lat) !== undefined && toNumberOrUndefined(data.lng) !== undefined
+            ? { lat: toNumberOrUndefined(data.lat), lng: toNumberOrUndefined(data.lng), zoom: 13 }
+            : undefined)),
+      map_zoom: toNumberOrUndefined(defaults.map_zoom) || toNumberOrUndefined(defaults.map_default_zoom) || 13,
     },
+    lat: toNumberOrUndefined(data.lat),
+    lng: toNumberOrUndefined(data.lng),
     dates: toString(data.dates),
     travelers: Number.isFinite(Number(data.travelers)) ? Number(data.travelers) : 0,
     budget_per_person: Number.isFinite(Number(data.budget_per_person)) ? Number(data.budget_per_person) : 0,

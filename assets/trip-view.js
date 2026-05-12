@@ -1,65 +1,360 @@
-import { normalizeTripData, normalizeStayGroups, normalizeShopGroups } from "./trip-normalizers.js";
+import { defaultDayLabel, makeScheduleRows, schedulePositionPercent, scheduleEventTypeClass, renderSchedulePanel as sharedRenderSchedulePanel, renderLeafletLocationsShared, priceLabel, durationLabel, renderMapFocus as sharedRenderMapFocus, renderScheduleDetailModal, collectDayMapLocations, tagsForMapStop, visibleMapLocations as sharedVisibleMapLocations, isFavoriteMapLocation, renderMapPanelShell, renderMapListHtml, renderReminderListHtml, renderReferencesPanel as sharedRenderReferencesPanel } from "./trip-render.js";
+import { escapeHtml as esc, nonEmpty, embedUrl, isGoogleShortUrl, parseLatLngFromText } from "./dom-helpers.js";
+import { formatMoney } from "./formatters.js";
+import { timeToMinutes, normalizeTripData, normalizeStayGroups, normalizeShopGroups } from "./trip-normalizers.js";
 import { validateTripData } from "./trip-validators.js";
 
-const state = { data: null, activeMain: "map", activeMapSub: "days", activeDay: null, currentMapId: "", activeDetailId: "", activeTag: "__all__" };
+const state = {
+  data: null,
+  activeMain: "map",
+  activeMapSub: "days",
+  activeMapDayKey: null,
+  activeMapId: "",
+  activeMapTag: "__all__",
+  activeDay: null,
+  currentMapId: "",
+  activeDetailId: "",
+  activeTag: "__all__",
+  mapMode: "single",
+  mapDayKey: null,
+  leafletMap: null,
+  schedulePage: 0,
+};
+
+const SCHEDULE_START_MINUTE = 0;
+const SCHEDULE_END_MINUTE = 24 * 60;
+const SCHEDULE_TOTAL_MINUTES = SCHEDULE_END_MINUTE - SCHEDULE_START_MINUTE;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
-const esc = (v) => String(v ?? "").replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c]));
-const nonEmpty = (v) => v !== undefined && v !== null && String(v).trim() !== "";
 
-function formatMoney(value, data = state.data) {
+function formatCurrency(value, data = state.data) {
   const currency = data?.defaults?.currency || "TWD";
   const locale = data?.defaults?.locale || "zh-TW";
-  return new Intl.NumberFormat(locale, { style: "currency", currency, maximumFractionDigits: 0 }).format(Number(value || 0));
+  return formatMoney(value, currency, locale);
 }
 
 function priceText(price) {
-  if (!price) return "";
-  if (typeof price === "string") return price;
-  if (price.kind === "text") return price.text || "";
-  if (price.kind === "free") return "免費";
-  const unit = price.unit === "per_night" ? " / 晚" : price.unit === "per_group" ? " / 組" : price.unit === "none" ? "" : " / 人";
-  if (price.kind === "fixed" && typeof price.amount === "number") return `${formatMoney(price.amount)}${unit}`;
-  if (price.kind === "range") {
-    const left = typeof price.min === "number" ? formatMoney(price.min) : "";
-    const right = typeof price.max === "number" ? formatMoney(price.max) : "";
-    return [left, right].filter(Boolean).join(" - ") + unit;
+  return priceLabel(price, state.data);
+}
+
+function durationText(min) {
+  return durationLabel(min);
+}
+
+function addressRaw(item) {
+  if (typeof item?.address === "string") return item.address;
+  return item?.address?.full || item?.address?.short || item?.short_address || "";
+}
+
+function searchLabelForItem(item) {
+  return [item?.maps_label, item?.name, addressRaw(item)].filter(nonEmpty).join(" ").trim();
+}
+
+function mapUrl(item) {
+  const latLng = latLngForItem(item);
+  if (latLng) return `https://maps.google.com/?q=${latLng.lat},${latLng.lng}`;
+
+  // Google short URLs cannot be expanded reliably in static GitHub Pages without a server.
+  // If the JSON has no lat/lng, do not embed the short URL or a fuzzy place query;
+  // Google often shows "unable to load place information". Use the global map center instead.
+  if (isGoogleShortUrl(item?.map)) return fallbackMapUrl();
+
+  if (nonEmpty(item?.map)) return item.map;
+  const label = searchLabelForItem(item) || "台灣";
+  return nonEmpty(label) ? `https://maps.google.com/?q=${encodeURIComponent(label)}` : "";
+}
+
+function fallbackMapEmbedUrl() {
+  const center = typeof defaultMapCenter === "function" ? defaultMapCenter() : { lat: 22.3384, lng: 120.3710, zoom: 13 };
+  // 單點模式沒有 map/lat/lng 時，用全域 map_center 顯示 Google marker。
+  return `https://www.google.com/maps?q=${center.lat},${center.lng}&z=${center.zoom || 13}&output=embed`;
+}
+
+function fallbackMapUrl() {
+  const center = defaultMapCenter();
+  return `https://maps.google.com/?q=${center.lat},${center.lng}&z=${center.zoom || 13}`;
+}
+
+
+function cleanGooglePlaceQuery(loc) {
+  const parts = [loc?.title, loc?.name, loc?.address]
+    .map((v) => String(v ?? "").trim())
+    .filter(Boolean);
+  const seen = new Set();
+  return parts.filter((part) => {
+    const key = part.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).join(" ").trim();
+}
+
+function googleMapsOpenUrl(loc) {
+  if (!loc?.isDefaultMap && nonEmpty(loc?.url)) return loc.url;
+  const query = cleanGooglePlaceQuery(loc);
+  return query ? `https://maps.google.com/?q=${encodeURIComponent(query)}` : "";
+}
+
+function googleSingleEmbedUrl(loc) {
+  const center = defaultMapCenter();
+  const latLng = loc?.latLng || null;
+  const zoom = latLng ? 17 : (center.zoom || DEFAULT_MAP_ZOOM);
+  const query = cleanGooglePlaceQuery(loc);
+
+  // 單點一律使用 Google Map iframe，且只顯示單一 marker，不使用 directions / A->B。
+  // 有座標時用 q=lat,lng 最穩定；沒有座標時用名稱/地址；都沒有時用全域 map_center。
+  if (latLng) return `https://www.google.com/maps?q=${latLng.lat},${latLng.lng}&z=${zoom}&output=embed`;
+  if (query) return `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=${zoom}&output=embed`;
+  return fallbackMapEmbedUrl();
+}
+
+
+const DEFAULT_MAP_ZOOM = 13;
+const DEFAULT_MAP_CENTER = { lat: 22.3384, lng: 120.3710, zoom: DEFAULT_MAP_ZOOM };
+
+const TILE_PROVIDER = {
+  url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+  options: {
+    subdomains: "abcd",
+    maxZoom: 20,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  }
+};
+
+const mapResolveCache = new Map();
+
+async function fetchTextWithProxy(url) {
+  const attempts = [
+    `https://r.jina.ai/${url}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`
+  ];
+  for (const target of attempts) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(target, { signal: controller.signal });
+      clearTimeout(timer);
+      if (res.ok) {
+        const text = await res.text();
+        if (text) return text;
+      }
+    } catch {}
   }
   return "";
 }
 
-function durationText(min) {
-  if (typeof min !== "number") return "";
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return [h ? `${h} 小時` : "", m ? `${m} 分` : ""].filter(Boolean).join(" ") || `${min} 分`;
+function extractLatLngFromHtml(text) {
+  if (!nonEmpty(text)) return null;
+  const patterns = [
+    /!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/,
+    /@(-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)/,
+    /\[(-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)\]/
+  ];
+  for (const pattern of patterns) {
+    const m = String(text).match(pattern);
+    if (!m) continue;
+    const lat = Number(m[1]);
+    const lng = Number(m[2]);
+    if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng };
+  }
+  return null;
 }
 
-function mapUrl(item) {
-  if (nonEmpty(item?.map)) return item.map;
-  if (typeof item?.lat === "number" && typeof item?.lng === "number") return `https://maps.google.com/?q=${item.lat},${item.lng}`;
-  const label = item?.maps_label || item?.name || item?.address?.full || item?.address || "台灣";
-  return nonEmpty(label) ? `https://maps.google.com/?q=${encodeURIComponent(label)}` : "";
+async function resolveShortMapCoordsForItem(item) {
+  if (!item || !isGoogleShortUrl(item.map)) return false;
+  if (latLngForItem(item)) return false;
+  if (mapResolveCache.has(item.map)) {
+    const cached = mapResolveCache.get(item.map);
+    if (cached?.latLng) { item.lat = cached.latLng.lat; item.lng = cached.latLng.lng; return true; }
+    return false;
+  }
+  const html = await fetchTextWithProxy(item.map);
+  const latLng = extractLatLngFromHtml(html);
+  mapResolveCache.set(item.map, { latLng });
+  if (latLng) {
+    item.lat = latLng.lat;
+    item.lng = latLng.lng;
+    return true;
+  }
+  return false;
 }
 
-function embedUrl(url) {
-  if (!nonEmpty(url)) return fallbackMapEmbedUrl();
-  try {
-    const u = new URL(url);
-    const q = u.searchParams.get("q") || u.searchParams.get("query") || url;
-    return `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;
-  } catch {
-    return `https://www.google.com/maps?q=${encodeURIComponent(url)}&output=embed`;
+async function resolveShortMapsInData(data) {
+  const items = [];
+  (data.days || []).forEach((day) => (day.stops || []).forEach((stop) => items.push(stop)));
+  (data.stays || []).forEach((item) => items.push(item));
+  (data.shops || []).forEach((item) => items.push(item));
+  (data.stay_groups || []).forEach((group) => (group.items || []).forEach((item) => items.push(item)));
+  (data.shop_groups || []).forEach((group) => (group.items || []).forEach((item) => items.push(item)));
+
+  let changed = false;
+  for (const item of items) {
+    if (await resolveShortMapCoordsForItem(item)) changed = true;
+  }
+  return changed;
+}
+
+
+function latLngForItem(item) {
+  const lat = Number(item?.lat);
+  const lng = Number(item?.lng);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
+  return parseLatLngFromText(item?.map) || parseLatLngFromText(item?.url) || parseLatLngFromText(item?.address?.full || item?.address || "");
+}
+
+function leafletReady() {
+  return typeof window !== "undefined" && window.L && typeof window.L.map === "function";
+}
+
+let leafletLoadPromise = null;
+
+function ensureLeafletLoaded() {
+  if (leafletReady()) return Promise.resolve();
+  if (leafletLoadPromise) return leafletLoadPromise;
+
+  leafletLoadPromise = new Promise((resolve, reject) => {
+    if (typeof document === "undefined") { reject(new Error("document unavailable")); return; }
+
+    if (!document.querySelector('link[data-trip-leaflet-css]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      link.dataset.tripLeafletCss = "1";
+      document.head.appendChild(link);
+    }
+
+    const existing = document.querySelector('script[data-trip-leaflet-js]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", reject, { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    script.defer = true;
+    script.dataset.tripLeafletJs = "1";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Leaflet 載入失敗"));
+    document.head.appendChild(script);
+  });
+
+  return leafletLoadPromise;
+}
+
+function defaultMapCenter() {
+  const center = state.data?.defaults?.map_center;
+  const rootLat = Number(state.data?.lat);
+  const rootLng = Number(state.data?.lng);
+  const lat = Number(center?.lat);
+  const lng = Number(center?.lng);
+  const zoom = Number(state.data?.defaults?.map_zoom ?? state.data?.defaults?.zoom ?? DEFAULT_MAP_ZOOM);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    return { lat, lng, zoom: Number.isFinite(zoom) ? zoom : DEFAULT_MAP_ZOOM };
+  }
+  if (Number.isFinite(rootLat) && Number.isFinite(rootLng)) {
+    return { lat: rootLat, lng: rootLng, zoom: Number.isFinite(zoom) ? zoom : DEFAULT_MAP_ZOOM };
+  }
+  return DEFAULT_MAP_CENTER;
+}
+
+function resetLeaflet() {
+  if (state.leafletMap) {
+    try { state.leafletMap.remove(); } catch {}
+    state.leafletMap = null;
   }
 }
 
-function fallbackMapEmbedUrl() {
-  // 無 map/lat/lng 時只顯示小琉球區域，不用 q 參數，避免產生紅色 marker。
-  return "https://www.google.com/maps/@22.3384,120.3710,13z?output=embed";
+function setMapCanvasMode(mode) {
+  const canvas = document.getElementById("mapCanvas");
+  if (canvas) canvas.dataset.mode = mode;
 }
 
-function dayLabel(day, index) { return day.label || `Day ${index + 1}`; }
+function numberedIcon(number, extraClass = "") {
+  if (!leafletReady()) return undefined;
+  return L.divIcon({
+    className: "trip-div-icon",
+    html: `<div class="num-marker ${extraClass}"><span>${esc(number)}</span></div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 34],
+    popupAnchor: [0, -30],
+  });
+}
+
+function renderLeafletLocations(locations, options = {}) {
+  return renderLeafletLocationsShared(locations, options, {
+    mapElementId: "leafletMap",
+    frameElementId: "mapFrame",
+    loadingText: "地圖載入中…",
+    tileProvider: TILE_PROVIDER,
+    getMap: () => state.leafletMap,
+    setMap: (map) => { state.leafletMap = map; },
+    defaultMapCenter,
+    setCanvasMode: setMapCanvasMode,
+    resetMap: resetLeaflet,
+    onLoadError: () => renderGoogleIframe(""),
+    popupIcon: true,
+    centerPanSelected: true,
+    onMarkerClick: (loc) => {
+      state.activeMapId = loc.id;
+      state.activeDetailId = loc.id;
+      state.currentMapId = loc.id;
+      const focus = document.getElementById("mapFocus");
+      if (focus) focus.innerHTML = renderMapFocus(loc);
+      $$(".outline-item,.favorite-item,.detail-card").forEach((el) => {
+        const active = el.dataset.detailId === loc.id || el.dataset.mapid === loc.id || el.dataset.mapId === loc.id;
+        el.classList.toggle("active-map", active);
+        el.classList.toggle("active", active);
+      });
+    },
+  });
+}
+
+function renderGoogleIframe(url) {
+  setMapCanvasMode("iframe");
+  resetLeaflet();
+  const frame = document.getElementById("mapFrame");
+  if (!frame) return;
+  const value = nonEmpty(url) ? String(url) : fallbackMapEmbedUrl();
+  frame.src = /[?&]output=embed/.test(value) ? value : embedUrl(value);
+}
+
+function updateMapDisplay(active, locations) {
+  if (state.mapMode === "day") {
+    const dayKey = state.mapDayKey ?? state.activeDay;
+    const dayLocations = locations.filter((loc) => String(loc.dayKey) === String(dayKey) && loc.hasCoords);
+    // Day route mode uses Leaflet only for stops with coordinates.
+    if (dayLocations.length) {
+      renderLeafletLocations(dayLocations, {
+        polyline: true,
+        keepOriginalOrder: true,
+        routeMode: true,
+        selectedId: active?.id,
+        centerSelected: Boolean(active?.hasCoords),
+      });
+      return;
+    }
+  }
+
+  // Single-location mode uses a clean Google Maps query instead of embedding short URLs directly.
+  const loc = active?.hasMap ? active : {
+    id: "global-map-center",
+    name: state.data?.title || "地圖中心",
+    title: state.data?.title || "地圖中心",
+    type: "",
+    tags: [],
+    url: fallbackMapUrl(),
+    latLng: null,
+    hasCoords: false,
+  };
+  renderGoogleIframe(googleSingleEmbedUrl(loc));
+}
+
+function dayLabel(day, index) {
+  return defaultDayLabel(day, index);
+}
 
 export function renderTripPage(rawData) {
   const data = normalizeTripData(rawData);
@@ -73,6 +368,12 @@ export function renderTripPage(rawData) {
   renderHeader();
   bindMainTabs();
   renderActivePanel();
+
+  // 參考 index.html：背景解析 maps.app.goo.gl 短網址。
+  // 成功解析出 lat/lng 後，重新渲染目前地圖頁，Leaflet 全日路線就會自動帶出 marker。
+  resolveShortMapsInData(data).then((changed) => {
+    if (changed && state.activeMain === "map") renderActivePanel();
+  });
 }
 
 function renderShell() {
@@ -101,7 +402,7 @@ function renderShell() {
 
       <nav class="main-tabs" id="mainTabs" aria-label="旅遊資訊分頁">
         <button class="main-tab active" data-main="map">地圖資訊</button>
-        <button class="main-tab" data-main="schedule">時程表</button>
+        <button class="main-tab" data-main="schedule">行程表</button>
         <button class="main-tab" data-main="reminders">行前提醒</button>
         <button class="main-tab" data-main="references">參考網站</button>
       </nav>
@@ -117,7 +418,7 @@ function renderHeader() {
   $("#subtitle").textContent = data.subtitle || data.summary || "";
   $("#dates").textContent = data.dates || "-";
   $("#travelers").textContent = data.travelers ? `${data.travelers} 人` : "-";
-  $("#budget").textContent = data.budget_per_person ? `${formatMoney(data.budget_per_person)} / 人` : "-";
+  $("#budget").textContent = data.budget_per_person ? `${formatCurrency(data.budget_per_person)} / 人` : "-";
   $("#nights").textContent = data.nights || "-";
   $("#tags").innerHTML = (data.tags || []).map((tag) => `<span class="badge">${esc(tag)}</span>`).join("");
 }
@@ -151,7 +452,7 @@ function timeText(stop) {
 }
 
 function stopEndTime(stop) {
-  const start = timeToMinute(timeText(stop));
+  const start = timeToMinutes(timeText(stop));
   if (start === null || typeof stop.duration_min !== "number" || stop.duration_min <= 0) return "";
   const end = start + stop.duration_min;
   const hh = String(Math.floor(end / 60) % 24).padStart(2, "0");
@@ -171,60 +472,45 @@ function normalizeTagName(tag) {
   return text;
 }
 
-function tagsForStop(stop) {
-  const tags = [];
-  if (Array.isArray(stop.tags)) tags.push(...stop.tags);
-  if (nonEmpty(stop.type)) tags.push(stop.type);
-  if (stop.highlight) tags.push("重點");
-  return [...new Set(tags.map(normalizeTagName).filter(Boolean))];
-}
-
-function allTags(locations) {
-  return [...new Set(locations.flatMap((loc) => loc.tags || []).filter(Boolean))];
-}
-
 function collectLocations() {
   const data = state.data;
-  const locations = [];
-
-  // 以 JSON days 為主：每日行程 / 所有地點都必須列出 Day 1 ~ Day N 的所有 stop。
-  // 有明確 map/lat/lng 的 stop 才進入「地點收藏夾」與地圖切換。
-  (data.days || []).forEach((day, dayIndex) => {
-    (day.stops || []).forEach((stop, stopIndex) => {
-      const explicitMap = nonEmpty(stop.map) || typeof stop.lat === "number" || typeof stop.lng === "number";
-      const url = explicitMap ? mapUrl(stop) : "";
-      const tags = tagsForStop(stop);
-      locations.push({
-        id: `day-${String(day.key).replace(/[^a-zA-Z0-9_-]/g, "_")}-${stopIndex + 1}`,
-        source: "day",
-        group: "每日行程",
-        dayKey: day.key,
-        dayLabel: dayLabel(day, dayIndex),
-        dayTitle: day.title || day.theme || "",
-        order: stopIndex + 1,
-        title: stop.maps_label || stop.name,
-        name: stop.name || stop.maps_label || "未命名行程",
-        time: timeText(stop),
-        timeRange: timeRangeText(stop),
-        duration: durationText(stop.duration_min),
-        transit: durationText(stop.transit_to_next_min),
-        next: stop.next || "",
-        type: normalizeTagName(stop.type || ""),
-        tags,
-        subtitle: [timeRangeText(stop), normalizeTagName(stop.type || ""), priceText(stop.price)].filter(Boolean).join("｜"),
-        address: addressText(stop),
-        note: stop.note || "",
-        price: priceText(stop.price),
-        highlight: Boolean(stop.highlight),
-        url,
-        hasMap: explicitMap,
-      });
-    });
+  const locations = collectDayMapLocations(data.days || [], {
+    idForStop: (day, _dayIndex, _stop, stopIndex) => `day-${String(day.key).replace(/[^a-zA-Z0-9_-]/g, "_")}-${stopIndex + 1}`,
+    dayLabel,
+    dayTitle: (day) => day.title || day.theme || "",
+    nameForStop: (stop) => stop.name || stop.maps_label || "未命名行程",
+    titleForStop: (stop) => stop.maps_label || stop.name,
+    typeForStop: (stop) => normalizeTagName(stop.type || ""),
+    timeRangeForStop: timeRangeText,
+    durationForStop: (stop) => durationText(stop.duration_min),
+    priceForStop: (stop) => priceText(stop.price),
+    addressForStop: addressText,
+    urlForStop: (stop) => {
+      const latLng = latLngForItem(stop);
+      const hasRawMap = nonEmpty(stop.map);
+      const address = addressText(stop);
+      if (!latLng && !hasRawMap && !address) return "";
+      return latLng || (hasRawMap && !isGoogleShortUrl(stop.map)) ? mapUrl(stop) : fallbackMapUrl();
+    },
+    latLngForStop: latLngForItem,
+    hasMapForStop: (stop, latLng, address) => Boolean(latLng || stop.map || address),
+    tagsForStop: (stop) => tagsForMapStop(stop, normalizeTagName),
+    extraForStop: (stop) => ({
+      group: "每日行程",
+      time: timeText(stop),
+      transit: durationText(stop.transit_to_next_min),
+      next: stop.next || "",
+      note: stop.note || "",
+      highlight: Boolean(stop.highlight),
+    }),
   });
 
-  // 住宿 / shops 只作為地圖收藏夾補充來源；「所有地點」仍以行程 days 為主。
+  // Stays and shops are supplemental sources for saved map places.
   normalizeStayGroups(data).forEach((group, gi) => group.items.forEach((item, ii) => {
-    const explicitMap = nonEmpty(item.map) || typeof item.lat === "number" || typeof item.lng === "number";
+    const latLng = latLngForItem(item);
+    const hasRawMap = nonEmpty(item.map);
+    const usesDefaultMap = !latLng && (!hasRawMap || isGoogleShortUrl(item.map));
+    const explicitMap = !usesDefaultMap;
     if (!explicitMap || item.show_in_map_info === false) return;
     const url = mapUrl(item);
     const tag = normalizeTagName(item.area || group.label || "住宿");
@@ -241,12 +527,18 @@ function collectLocations() {
       address: item.address || item.area || "",
       note: item.note || "",
       url,
+      latLng,
+      hasCoords: Boolean(latLng),
       hasMap: true,
+      isDefaultMap: false,
     });
   }));
 
   normalizeShopGroups(data).forEach((group, gi) => group.items.forEach((item, ii) => {
-    const explicitMap = nonEmpty(item.map) || typeof item.lat === "number" || typeof item.lng === "number";
+    const latLng = latLngForItem(item);
+    const hasRawMap = nonEmpty(item.map);
+    const usesDefaultMap = !latLng && (!hasRawMap || isGoogleShortUrl(item.map));
+    const explicitMap = !usesDefaultMap;
     if (!explicitMap || item.show_in_map_info === false) return;
     const url = mapUrl(item);
     const primaryTag = normalizeTagName(item.type || item.tag || group.label || "資訊");
@@ -265,186 +557,135 @@ function collectLocations() {
       note: item.note || "",
       price: priceText(item.price),
       url,
+      latLng,
+      hasCoords: Boolean(latLng),
       hasMap: true,
+      isDefaultMap: false,
     });
   }));
   return locations;
 }
 
+function collectMapLocations() {
+  return collectLocations();
+}
+
+function visibleMapLocations(locations) {
+  return sharedVisibleMapLocations(locations, {
+    activeSub: state.activeMapSub,
+    activeDayKey: state.activeMapDayKey,
+    activeTag: state.activeMapTag,
+    favoritePredicate: isFavoriteLocation,
+  });
+}
+
+function isFavoriteLocation(loc) {
+  return isFavoriteMapLocation(loc);
+}
+
 function renderMapPanel() {
   const days = state.data.days || [];
-  const locations = collectLocations();
-  const first = locations.find((l) => l.hasMap) || locations[0];
-  if (!state.currentMapId && first?.hasMap) state.currentMapId = first.id;
-  if (!state.activeDetailId && locations[0]) state.activeDetailId = locations[0].id;
-  const active = locations.find((l) => l.id === state.currentMapId && l.hasMap) || locations.find((l) => l.hasMap);
+  if (!state.activeMapDayKey && days[0]) state.activeMapDayKey = days[0].key;
+  if (!state.activeDay && state.activeMapDayKey) state.activeDay = state.activeMapDayKey;
+  const locations = collectMapLocations();
+  const visible = visibleMapLocations(locations);
+  const first = visible.find((loc) => loc.hasMap) || visible[0] || locations.find((loc) => loc.hasMap) || locations[0];
+  if (!state.activeMapId || !locations.some((loc) => loc.id === state.activeMapId)) state.activeMapId = first ? first.id : "";
+  const active = locations.find((loc) => loc.id === state.activeMapId) || first;
 
-  $("#panel").innerHTML = `
-    <div class="map-layout">
-      <aside class="map-side">
-        <div class="sub-tabs" id="mapSubTabs">
-          <button class="sub-tab ${state.activeMapSub === "days" ? "active" : ""}" data-sub="days">每日行程</button>
-          <button class="sub-tab ${state.activeMapSub === "all" ? "active" : ""}" data-sub="all">所有地點</button>
-          <button class="sub-tab ${state.activeMapSub === "saved" ? "active" : ""}" data-sub="saved">地點收藏夾</button>
-        </div>
-        <div id="mapList"></div>
-      </aside>
-      <section class="map-frame-card">
-        <iframe id="mapFrame" src="${esc(active ? embedUrl(active.url) : fallbackMapEmbedUrl())}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-        <div class="map-focus" id="mapFocus">${active ? renderMapFocus(active) : `<span class="muted">尚未選擇地點</span>`}</div>
-      </section>
-    </div>
-  `;
+  state.currentMapId = active?.hasMap ? active.id : "";
+  state.activeDetailId = active?.id || "";
 
-  $$(".sub-tab").forEach((button) => button.addEventListener("click", () => { state.activeMapSub = button.dataset.sub; state.activeTag = "__all__"; renderMapPanel(); }));
-  renderMapList(locations, days);
+  $("#panel").innerHTML = renderMapPanelShell({
+    activeSub: state.activeMapSub,
+    frameSrc: fallbackMapEmbedUrl(),
+    focusHtml: active ? renderMapFocus(active) : `<span class="muted">尚未選擇地點</span>`,
+    listHtml: renderMapList(locations, days),
+    subAttr: "data-sub",
+  });
+
+  $$(".sub-tab").forEach((button) => button.addEventListener("click", () => { state.activeMapSub = button.dataset.sub; state.activeMapTag = "__all__"; state.activeTag = "__all__"; state.activeMapId = ""; state.activeDetailId = ""; state.mapMode = "single"; state.mapDayKey = null; renderMapPanel(); }));
+  bindMapListEvents(locations);
+  updateMapDisplay(active, locations);
 }
 
 function renderMapFocus(loc) {
-  return renderDetailCard(loc, relatedDayLocations(loc), { compact: true, mapFocus: true });
-}
-
-function relatedDayLocations(loc) {
-  const locations = collectLocations();
-  return loc?.dayKey !== undefined ? locations.filter((x) => x.dayKey === loc.dayKey && x.source === "day") : [];
+  return sharedRenderMapFocus(loc, {
+    activeId: state.activeDetailId,
+    googleMapsUrl: googleMapsOpenUrl(loc),
+  });
 }
 
 function renderMapList(locations, days) {
-  const box = $("#mapList");
-  if (!box) return;
-  if (state.activeMapSub === "days") box.innerHTML = renderDailyItinerary(locations, days);
-  else if (state.activeMapSub === "all") box.innerHTML = renderAllPlaces(locations);
-  else box.innerHTML = renderFavoritePlaces(locations);
-  bindMapListEvents(locations);
-}
-
-function renderDailyItinerary(locations, days) {
-  const activeDay = days.find((d) => d.key === state.activeDay) || days[0];
-  if (!activeDay) return `<div class="empty">尚無每日行程</div>`;
-  const dayIndex = days.findIndex((d) => d.key === activeDay.key);
-  const dayLocations = locations.filter((loc) => loc.source === "day" && loc.dayKey === activeDay.key);
-  const activeDetail = dayLocations.find((loc) => loc.id === state.activeDetailId) || dayLocations[0];
-  if (activeDetail && state.activeDetailId !== activeDetail.id) state.activeDetailId = activeDetail.id;
-  return `
-    <div class="day-tabs">${days.map((day, index) => `
-      <button class="day-tab ${day.key === activeDay.key ? "active" : ""}" data-day-key="${esc(day.key)}">${esc(dayLabel(day, index))}</button>`).join("")}</div>
-    <article class="day-summary-card">
-      <div class="small muted">${esc(dayLabel(activeDay, dayIndex))}</div>
-      <h2>${esc(activeDay.title || dayLabel(activeDay, dayIndex))}</h2>
-      ${activeDay.theme ? `<p>${esc(activeDay.theme)}</p>` : ""}
-      ${activeDay.hero ? `<span class="badge">重點：${esc(activeDay.hero)}</span>` : ""}
-      <button class="map-all-day-btn" type="button" data-map-day="${esc(activeDay.key)}">🛫 將當日全部地點顯示在地圖上</button>
-      <div class="outline-block">
-        <div class="outline-title">▼ 本日行程（${dayLocations.length}）</div>
-        <div class="outline-list">${dayLocations.map(renderOutlineItem).join("") || `<div class="empty compact">此日沒有行程</div>`}</div>
-      </div>
-    </article>
-  `;
-}
-
-function renderOutlineItem(loc) {
-  return `
-    <button class="outline-item ${loc.id === state.activeDetailId ? "active" : ""}" data-detail-id="${esc(loc.id)}"${loc.hasMap ? ` data-mapid="${esc(loc.id)}"` : ""}>
-      <span class="outline-num">${esc(loc.order || "")}</span>
-      ${loc.timeRange ? `<span class="outline-time">${esc(loc.timeRange)}</span>` : ""}
-      <span class="outline-name">${esc(loc.name)}</span>
-      ${loc.type ? `<span class="outline-type">${esc(loc.type)}</span>` : ""}
-    </button>
-  `;
-}
-
-function renderDetailCard(loc, dayLocations = [], options = {}) {
-  const next = loc.next || dayLocations.find((x) => x.order === loc.order + 1)?.name || "";
-  const detailTags = (loc.tags || []).filter((tag) => tag !== "重點");
-  return `
-    <article class="detail-card ${options.mapFocus ? "map-focus-detail" : ""} ${loc.id === state.activeDetailId ? "active-map" : ""}" data-detail-id="${esc(loc.id)}"${loc.hasMap ? ` data-mapid="${esc(loc.id)}"` : ""}>
-      <h2>${esc(loc.name)}</h2>
-      <div class="detail-meta">
-        ${loc.timeRange ? `<span class="time-pill">${esc(loc.timeRange)}</span>` : ""}
-        ${loc.duration ? `<span class="pill">${esc(loc.duration)}</span>` : ""}
-        ${loc.price ? `<span class="pill">${esc(loc.price)}</span>` : ""}
-      </div>
-      ${detailTags.length ? `<div class="tag-list">${detailTags.map((tag) => `<span class="tag-chip">${esc(tag)}</span>`).join("")}</div>` : ""}
-      ${loc.address ? `<div class="addr-box"><div class="small muted">地址</div><div>${esc(loc.address)}</div></div>` : ""}
-      ${loc.note ? `<p class="detail-note">${esc(loc.note)}</p>` : ""}
-      ${!loc.hasMap ? `<div class="map-missing-note">尚未填寫地圖位置，右方暫顯示小琉球區域且不顯示 marker。</div>` : ""}
-      ${loc.hasMap ? `<a class="btn secondary detail-map-btn" href="${esc(loc.url)}" target="_blank" rel="noopener noreferrer">開啟 Google Maps</a>` : ""}
-      ${next ? `<button class="next-btn" type="button" data-next-title="${esc(next)}">下一站：${esc(next)}</button>` : ""}
-    </article>
-  `;
-}
-
-function renderTagFilters(tags, activeTag = state.activeTag || "__all__") {
-  return `
-    <div class="tag-filter">
-      <button class="tag-filter-btn ${activeTag === "__all__" ? "active" : ""}" data-tag="__all__">全部</button>
-      ${tags.map((tag) => `<button class="tag-filter-btn ${activeTag === tag ? "active" : ""}" data-tag="${esc(tag)}">${esc(tag)}</button>`).join("")}
-    </div>
-  `;
-}
-
-function filterByActiveTag(locations) {
-  const activeTag = state.activeTag || "__all__";
-  if (activeTag === "__all__") return locations;
-  return locations.filter((loc) => (loc.tags || []).includes(activeTag) || loc.type === activeTag);
-}
-
-function renderAllPlaces(locations) {
-  const candidates = locations.filter((loc) => loc.source === "day");
-  const tags = allTags(candidates);
-  const filtered = filterByActiveTag(candidates);
-  const active = filtered.find((loc) => loc.id === state.activeDetailId) || filtered[0];
-  return `
-    ${renderTagFilters(tags)}
-    <div class="favorite-list all-place-list">${filtered.map(renderPlaceListItem).join("") || `<div class="empty">此分類沒有地點</div>`}</div>
-  `;
-}
-
-function renderPlaceListItem(loc) {
-  return `
-    <button class="favorite-item all-place-item ${loc.id === state.activeDetailId ? "active" : ""}" data-detail-id="${esc(loc.id)}"${loc.hasMap ? ` data-mapid="${esc(loc.id)}"` : ""}>
-      <span>${esc(loc.name)}</span>
-      ${loc.type ? `<small>${esc(loc.type)}</small>` : loc.tags?.[0] ? `<small>${esc(loc.tags[0])}</small>` : ""}
-    </button>
-  `;
-}
-
-function renderFavoritePlaces(locations) {
-  const candidates = locations.filter((loc) => loc.hasMap && nonEmpty(loc.url));
-  const tags = allTags(candidates);
-  const filtered = filterByActiveTag(candidates);
-  const active = filtered.find((loc) => loc.id === state.activeDetailId) || filtered.find((loc) => loc.id === state.currentMapId) || filtered[0];
-  return `
-    ${renderTagFilters(tags)}
-    <div class="favorite-list">${filtered.map((loc) => `
-      <button class="favorite-item ${loc.id === state.currentMapId || loc.id === state.activeDetailId ? "active" : ""}" data-mapid="${esc(loc.id)}" data-detail-id="${esc(loc.id)}">
-        <span>${esc(loc.title || loc.name)}</span>
-        ${loc.type ? `<small>${esc(loc.type)}</small>` : loc.tags?.[0] ? `<small>${esc(loc.tags[0])}</small>` : ""}
-      </button>`).join("") || `<div class="empty">尚無可顯示地點</div>`}</div>
-  `;
+  return renderMapListHtml(locations, {
+    activeSub: state.activeMapSub,
+    activeDayKey: state.activeMapDayKey,
+    activeTag: state.activeMapTag,
+    activeId: state.activeMapId,
+    mapMode: state.mapMode,
+    mapDayKey: state.mapDayKey,
+    days,
+    dayLabel,
+    dayTitle: (day, index) => day.title || day.theme || dayLabel(day, index),
+    dayTabAttr: "data-day-key",
+    dayRouteAttr: "data-map-day",
+    tagAttr: "data-tag",
+    detailAttr: "data-detail-id",
+    mapIdAttr: "data-mapid",
+    favoritePredicate: isFavoriteLocation,
+    typeClass: (type) => eventTypeClass({ type }),
+  });
 }
 
 function bindMapListEvents(locations) {
   $$('[data-day-key]').forEach((el) => el.addEventListener('click', () => {
+    state.activeMapDayKey = el.dataset.dayKey;
     state.activeDay = Number.isNaN(Number(el.dataset.dayKey)) ? el.dataset.dayKey : Number(el.dataset.dayKey);
+    state.activeMapId = "";
     state.activeDetailId = "";
+    state.mapMode = "single";
+    state.mapDayKey = null;
     renderMapPanel();
   }));
   $$('[data-tag]').forEach((el) => el.addEventListener('click', () => {
+    state.activeMapTag = el.dataset.tag;
     state.activeTag = el.dataset.tag;
+    state.activeMapId = "";
+    state.activeDetailId = "";
     renderMapPanel();
   }));
   $$('[data-detail-id]').forEach((el) => el.addEventListener('click', () => {
+    const loc = locations.find((x) => x.id === el.dataset.detailId);
+    const routeMode = state.mapMode === "day" && loc && String(state.mapDayKey ?? state.activeMapDayKey) === String(loc.dayKey);
+    if (routeMode && !loc?.hasCoords) return;
+    state.activeMapId = el.dataset.detailId;
     state.activeDetailId = el.dataset.detailId;
     focusLocation(el.dataset.detailId, locations);
-    if (state.activeMapSub === "days" || state.activeMapSub === "all") renderMapList(locations, state.data.days || []);
+    if (state.activeMapSub === "days") {
+      const box = $("#mapList");
+      if (box) {
+        box.innerHTML = renderMapList(locations, state.data.days || []);
+        bindMapListEvents(locations);
+      }
+    }
   }));
   $$('[data-mapid]:not([data-detail-id])').forEach((el) => el.addEventListener('click', () => {
     focusMap(el.dataset.mapid, locations);
   }));
   $$('[data-map-day]').forEach((el) => el.addEventListener('click', () => {
-    const firstOfDay = locations.find((loc) => String(loc.dayKey) === String(el.dataset.mapDay) && loc.hasMap);
-    if (firstOfDay) focusMap(firstOfDay.id, locations);
+    const dayKey = el.dataset.mapDay;
+    const already = state.mapMode === "day" && String(state.mapDayKey) === String(dayKey);
+    state.mapMode = already ? "single" : "day";
+    state.mapDayKey = already ? null : dayKey;
+    const firstOfDay = locations.find((loc) => String(loc.dayKey) === String(dayKey));
+    const firstMappableOfDay = locations.find((loc) => String(loc.dayKey) === String(dayKey) && loc.hasCoords);
+    if (firstOfDay) {
+      const target = already ? firstOfDay : (firstMappableOfDay || firstOfDay);
+      state.currentMapId = target.hasCoords ? target.id : "";
+      state.activeMapId = target.id;
+      state.activeDetailId = target.id;
+    }
+    renderMapPanel();
   }));
 }
 
@@ -455,15 +696,20 @@ function focusLocation(id, locations) {
   const frame = $("#mapFrame");
   const focus = $("#mapFocus");
 
+  const keepDayRoute = state.mapMode === "day" && String(state.mapDayKey ?? state.activeDay) === String(loc.dayKey);
+  // Day route mode only focuses stops with coordinates.
+  if (keepDayRoute && !loc.hasCoords) return;
+  if (!loc.hasMap) return;
+  state.activeMapId = id;
   state.activeDetailId = id;
-  if (loc.hasMap) {
-    state.currentMapId = id;
-    if (frame) frame.src = embedUrl(loc.url);
-  } else {
-    state.currentMapId = "";
-    if (frame) frame.src = fallbackMapEmbedUrl();
+  if (!keepDayRoute) {
+    state.mapMode = "single";
+    state.mapDayKey = null;
   }
+  if (keepDayRoute) state.currentMapId = loc.hasCoords ? id : "";
+  else state.currentMapId = loc.hasMap ? id : "";
 
+  updateMapDisplay(loc, locations);
   if (focus) focus.innerHTML = renderMapFocus(loc);
   $$(".location,.outline-item,.place-card,.favorite-item,.detail-card").forEach((el) => {
     const active = el.dataset.detailId === id || (loc.hasMap && el.dataset.mapid === id);
@@ -477,121 +723,189 @@ function focusMap(id, locations) {
 }
 
 function scheduleRows() {
-  const rows = [];
-  for (let minute = 6 * 60; minute <= 24 * 60 + 30; minute += 30) {
-    const h24 = Math.floor(minute / 60);
-    const hh = String(h24 % 24).padStart(2, "0");
-    const mm = String(minute % 60).padStart(2, "0");
-    rows.push({ minute, label: `${hh}:${mm}`, half: mm === "30" });
+  return makeScheduleRows({ startMinute: SCHEDULE_START_MINUTE, endMinute: SCHEDULE_END_MINUTE, formatMinute: formatClockFromMinute });
+}
+
+function schedulePosition(minute) {
+  return schedulePositionPercent(minute, { startMinute: SCHEDULE_START_MINUTE, totalMinutes: SCHEDULE_TOTAL_MINUTES });
+}
+
+function scheduleWindowDays(days) {
+  const pageSize = 5;
+  const totalPages = Math.max(1, Math.ceil(days.length / pageSize));
+  state.schedulePage = Math.max(0, Math.min(state.schedulePage || 0, totalPages - 1));
+  const start = state.schedulePage * pageSize;
+  return { pageSize, totalPages, start, days: days.slice(start, start + pageSize) };
+}
+
+function eventTypeClass(type) {
+  return scheduleEventTypeClass(normalizeTagName(type?.type || ""));
+}
+
+function buildScheduleEvents(day, dayIndex) {
+  const raw = (day.stops || []).map((stop, stopIndex) => {
+    const startMinute = timeToMinutes(stop.start_time || stop.time);
+    if (startMinute === null) return null;
+    const duration = typeof stop.duration_min === "number" && stop.duration_min > 0 ? stop.duration_min : 30;
+    const endMinute = startMinute + duration;
+    if (endMinute <= SCHEDULE_START_MINUTE || startMinute >= SCHEDULE_END_MINUTE) return null;
+    return {
+      dayIndex,
+      stopIndex,
+      stop,
+      startMinute: Math.max(startMinute, SCHEDULE_START_MINUTE),
+      endMinute: Math.min(endMinute, SCHEDULE_END_MINUTE),
+      originalStart: startMinute,
+      originalEnd: endMinute,
+      lane: 0,
+      laneCount: 1,
+    };
+  }).filter(Boolean).sort((a, b) => a.startMinute - b.startMinute || b.endMinute - a.endMinute);
+
+  const clusters = [];
+  for (const ev of raw) {
+    let cluster = clusters.find((c) => ev.startMinute < c.end && ev.endMinute > c.start);
+    if (!cluster) {
+      cluster = { events: [], start: ev.startMinute, end: ev.endMinute };
+      clusters.push(cluster);
+    }
+    cluster.events.push(ev);
+    cluster.start = Math.min(cluster.start, ev.startMinute);
+    cluster.end = Math.max(cluster.end, ev.endMinute);
   }
-  return rows;
-}
 
-function schedulePeriodCell(rowIndex) {
-  if (rowIndex === 0) return `<td class="period-cell period-morning" rowspan="14">早</td>`;
-  if (rowIndex === 14) return `<td class="period-cell period-afternoon" rowspan="12">午</td>`;
-  if (rowIndex === 26) return `<td class="period-cell period-night" rowspan="12">晚</td>`;
-  return "";
-}
-
-function timeToMinute(value) {
-  if (!nonEmpty(value)) return null;
-  const match = String(value).trim().match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return null;
-  let h = Number(match[1]);
-  const m = Number(match[2]);
-  if (!Number.isFinite(h) || !Number.isFinite(m) || m < 0 || m > 59) return null;
-  if (h < 6) h += 24;
-  return h * 60 + m;
-}
-
-function buildScheduleMatrix(days, rows) {
-  const start = rows[0]?.minute ?? 360;
-  const last = rows[rows.length - 1]?.minute ?? 1470;
-  return days.map((day) => {
-    const cells = Array(rows.length).fill(null);
-    (day.stops || []).forEach((stop) => {
-      const minute = timeToMinute(stop.start_time || stop.time);
-      if (minute === null || minute < start || minute > last) return;
-      let row = Math.round((minute - start) / 30);
-      if (row < 0 || row >= rows.length) return;
-      while (row < rows.length && cells[row]?.covered) row += 1;
-      if (row >= rows.length) return;
-      const duration = typeof stop.duration_min === "number" && stop.duration_min > 0 ? stop.duration_min : 30;
-      const span = Math.max(1, Math.min(rows.length - row, Math.ceil(duration / 30)));
-      cells[row] = { stop, span };
-      for (let i = 1; i < span; i += 1) cells[row + i] = { covered: true };
+  clusters.forEach((cluster) => {
+    const lanes = [];
+    cluster.events.forEach((ev) => {
+      let lane = lanes.findIndex((laneEnd) => laneEnd <= ev.startMinute);
+      if (lane === -1) {
+        lane = lanes.length;
+        lanes.push(ev.endMinute);
+      } else {
+        lanes[lane] = ev.endMinute;
+      }
+      ev.lane = lane;
+      ev.laneCount = lanes.length;
     });
-    return cells;
+    cluster.events.forEach((ev) => { ev.laneCount = lanes.length; });
+  });
+
+  return raw.map((ev) => {
+    const top = schedulePosition(ev.startMinute);
+    const height = Math.max(2.8, ((ev.endMinute - ev.startMinute) / SCHEDULE_TOTAL_MINUTES) * 100);
+    const laneGap = 1.5;
+    const width = 100 / ev.laneCount;
+    const left = ev.lane * width;
+    const typeClass = eventTypeClass(ev.stop);
+    return { ...ev, top, height, left, width: Math.max(12, width), laneGap, typeClass };
   });
 }
 
-function renderScheduleCell(cell) {
-  if (!cell) return `<td class="schedule-empty"></td>`;
-  if (cell.covered) return "";
-  const stop = cell.stop;
-  const start = stop.start_time || stop.time || "";
-  const end = stopEndTime(stop);
-  const range = start && end ? `${start}–${end}` : start;
-  return `
-    <td class="schedule-stop-cell" rowspan="${cell.span}">
-      <div class="schedule-stop-name">${esc(stop.name || stop.maps_label || "未命名行程")}</div>
-      <div class="schedule-stop-time">${esc(range)}</div>
-    </td>`;
+function formatClockFromMinute(minute) {
+  if (!Number.isFinite(minute)) return "";
+  const h = Math.floor(minute / 60) % 24;
+  const m = minute % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
 function renderSchedulePanel() {
-  const days = state.data.days || [];
+  const allDays = state.data.days || [];
   const rows = scheduleRows();
-  const matrix = buildScheduleMatrix(days, rows);
+  const windowData = scheduleWindowDays(allDays);
+  const visibleDays = windowData.days;
+  const toolbarHtml = windowData.totalPages > 1 ? `<div class="calendar-toolbar calendar-toolbar-compact"><div class="calendar-nav"><button type="button" data-schedule-prev ${state.schedulePage <= 0 ? "disabled" : ""}>‹</button><span>${state.schedulePage + 1} / ${windowData.totalPages}</span><button type="button" data-schedule-next ${state.schedulePage >= windowData.totalPages - 1 ? "disabled" : ""}>›</button></div></div>` : "";
 
   $("#panel").innerHTML = `
-    <div class="schedule-card">
-      <div class="schedule-scroll">
-        <table class="schedule-table timeline-table" aria-label="旅遊時程表">
-          <colgroup>
-            <col class="col-period" />
-            <col class="col-time" />
-            ${days.map(() => `<col class="col-day" />`).join("")}
-          </colgroup>
-          <thead>
-            <tr>
-              <th class="period-head">時段</th>
-              <th class="time-head">時刻</th>
-              ${days.map((day, index) => `
-                <th class="day-head">
-                  <div class="day-head-label">${esc(dayLabel(day, index))}</div>
-                  <div class="day-head-title">${esc(day.title || day.theme || "")}</div>
-                </th>`).join("")}
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map((row, rowIndex) => `
-              <tr>
-                ${schedulePeriodCell(rowIndex)}
-                <td class="time-cell ${row.half ? "half" : "whole"}">${esc(row.label)}</td>
-                ${days.map((_, dayIndex) => renderScheduleCell(matrix[dayIndex][rowIndex])).join("")}
-              </tr>`).join("")}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    ${sharedRenderSchedulePanel({
+      days: visibleDays,
+      rows,
+      startMinute: SCHEDULE_START_MINUTE,
+      totalMinutes: SCHEDULE_TOTAL_MINUTES,
+      toolbarHtml,
+      modalHostHtml: '<div id="scheduleModalHost"></div>',
+      dayOffset: windowData.start,
+      dayLabel,
+      dayColAttrs: (_day, index) => `data-calendar-day="${index}"`,
+      getEvents: buildScheduleEvents,
+      eventAttrs: (ev) => {
+        const label = ev.stop.name || ev.stop.maps_label || "行程";
+        return `data-schedule-day="${ev.dayIndex}" data-schedule-stop="${ev.stopIndex}" aria-label="查看 ${esc(label)} 詳細內容"`;
+      },
+      eventLabel: (ev) => ev.stop.name || ev.stop.maps_label || "未命名行程",
+      eventTime: (ev) => `${formatClockFromMinute(ev.originalStart)}–${formatClockFromMinute(ev.originalEnd)}`,
+      positionPercent: schedulePosition,
+    })}
   `;
+
+  $('[data-schedule-prev]')?.addEventListener('click', () => { state.schedulePage = Math.max(0, (state.schedulePage || 0) - 1); renderSchedulePanel(); });
+  $('[data-schedule-next]')?.addEventListener('click', () => { state.schedulePage = Math.min(windowData.totalPages - 1, (state.schedulePage || 0) + 1); renderSchedulePanel(); });
+
+  $$(".calendar-event").forEach((cell) => {
+    const open = () => {
+      const dayIndex = Number(cell.dataset.scheduleDay);
+      const stopIndex = Number(cell.dataset.scheduleStop);
+      openScheduleModal(allDays[dayIndex], allDays[dayIndex]?.stops?.[stopIndex], dayIndex, stopIndex);
+    };
+    cell.addEventListener("click", open);
+    cell.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        open();
+      }
+    });
+  });
 }
 
-function reminderText(item) {
-  if (typeof item === "string") return item;
-  if (item && typeof item === "object") return item.text || item.title || item.name || "";
-  return String(item ?? "");
+function stopPriceText(stop) {
+  return priceLabel(stop?.price, state.data) || stop?.cost || "";
 }
 
-function renderReminderItem(item, index) {
-  const text = reminderText(item);
-  return `
-    <div class="outline-item reminder-item">
-      <span class="outline-num">${index + 1}</span>
-      <span class="outline-name">${esc(text)}</span>
-    </div>`;
+function openScheduleModal(day, stop, dayIndex = 0, stopIndex = 0) {
+  if (!day || !stop) return;
+  const host = document.getElementById("scheduleModalHost") || document.body;
+  const start = stop.start_time || stop.time || "";
+  const end = stopEndTime(stop);
+  const range = start && end ? `${start}–${end}` : start;
+  const price = stopPriceText(stop);
+  const address = addressText(stop);
+  const map = mapUrl(stop);
+  const title = stop.name || stop.maps_label || "未命名行程";
+  const hasGoogleMap = nonEmpty(stop.map) || Boolean(latLngForItem(stop));
+
+  host.innerHTML = renderScheduleDetailModal({
+    title,
+    subtitle: `${dayLabel(day, dayIndex)}${day.title ? `｜${day.title}` : ""}`,
+    timeRange: range,
+    duration: typeof stop.duration_min === "number" ? durationText(stop.duration_min) : "",
+    price,
+    address,
+    note: stop.note || "",
+    next: stop.next || "",
+    googleMapsUrl: hasGoogleMap ? map : "",
+  });
+
+  const modal = host.querySelector(".schedule-modal");
+  const close = () => { host.innerHTML = ""; document.removeEventListener("keydown", onKeyDown); };
+  const onKeyDown = (event) => { if (event.key === "Escape") close(); };
+  modal.querySelector(".schedule-modal-backdrop")?.addEventListener("click", close);
+  modal.querySelector(".schedule-modal-close")?.addEventListener("click", close);
+  document.addEventListener("keydown", onKeyDown);
+  modal.querySelector(".schedule-modal-close")?.focus();
+}
+
+function detailAmount(detail) {
+  if (typeof detail?.amount === "number") return detail.amount;
+  const p = detail?.price;
+  if (typeof p === "number") return p;
+  if (typeof p === "string") return Number(String(p).replace(/[^0-9.-]/g, "")) || 0;
+  if (p && typeof p === "object") return Number(p.min ?? p.amount ?? 0) || 0;
+  return 0;
+}
+
+function detailPriceText(detail) {
+  if (detail?.price !== undefined) return priceText(detail.price);
+  if (typeof detail?.amount === "number") return formatCurrency(detail.amount);
+  return "";
 }
 
 function renderBudgetTabs(items) {
@@ -610,9 +924,8 @@ function renderBudgetSummary(items) {
     return `
       ${renderBudgetTabs(items)}
       <div class="budget-total-card">
-        <div class="budget-summary-row"><strong>Total</strong><span>${formatMoney(total)}</span></div>
-        ${items.map((item) => `<div class="details-row"><strong>${esc(item.label)}</strong><span>${formatMoney(item.value)}</span></div>`).join("")}
-        <div class="summary-box"><div class="small">Details total</div><strong>${formatMoney(total)}</strong></div>
+        <div class="budget-summary-row"><strong>Total</strong><span>${formatCurrency(total)}</span></div>
+        ${items.map((item) => `<div class="details-row"><strong>${esc(item.label)}</strong><span>${formatCurrency(item.value)}</span></div>`).join("")}
       </div>`;
   }
   const item = items.find((x) => x.label === active) || items[0];
@@ -623,13 +936,12 @@ function renderBudgetSummary(items) {
   return `
     ${renderBudgetTabs(items)}
     <div class="budget-total-card">
-      <div class="budget-summary-row"><strong>${esc(item.label)}</strong><span>${formatMoney(value)}</span></div>
+      <div class="budget-summary-row"><strong>${esc(item.label)}</strong><span>${formatCurrency(value)}</span></div>
       <div class="budget-bar"><div style="width:${Math.max(0, Math.min(100, share))}%"></div></div>
       <div class="small muted budget-share">Share: ${share}%</div>
       <div class="details-wrap">
-        ${details.map((d) => `<div class="details-row"><strong>${esc(d.name || "細項")}</strong><span>${formatMoney(d.amount)}</span></div>`).join("") || `<div class="empty compact">沒有細項</div>`}
+        ${details.map((d) => `<div class="details-row"><strong>${esc(d.name || "細項")}</strong><span>${esc(detailPriceText(d) || formatCurrency(detailAmount(d)))}</span></div>`).join("") || `<div class="empty compact">沒有細項</div>`}
       </div>
-      <div class="summary-box"><div class="small">Details total</div><strong>${formatMoney(value)}</strong></div>
     </div>`;
 }
 
@@ -639,7 +951,7 @@ function renderRemindersPanel() {
   if (!state.activeBudgetCategory) state.activeBudgetCategory = "__total__";
   $("#panel").innerHTML = `
     <div class="reminder-grid reminder-grid-two">
-      <section class="info-card"><h2>行前提醒</h2><div class="outline-list reminder-list">${reminders.map(renderReminderItem).join("") || `<div class="empty">尚無提醒</div>`}</div></section>
+      <section class="info-card"><h2>行前提醒</h2>${renderReminderListHtml(reminders)}</section>
       <section class="info-card"><h2>預算摘要</h2>${renderBudgetSummary(budgetItems)}</section>
     </div>
   `;
@@ -649,28 +961,14 @@ function renderRemindersPanel() {
   }));
 }
 
-function renderReferenceItem(ref, index) {
-  const url = ref.url || "#";
-  return `
-    <a class="outline-item reference-item" href="${esc(url)}" target="_blank" rel="noopener noreferrer">
-      <span class="outline-num">${index + 1}</span>
-      <span class="outline-name">${esc(ref.title || ref.url || "參考網站")}</span>
-      ${ref.type || ref.source ? `<span class="outline-type">${esc(ref.type || ref.source)}</span>` : ""}
-    </a>`;
-}
-
 function renderReferencesPanel() {
   const refs = state.data.references || [];
   const shopRefs = (state.data.shops || []).filter((s) => s.link).map((s) => ({ title: s.name, url: s.link, source: normalizeTagName(s.tag || "資訊") }));
   const all = [...refs, ...shopRefs];
-  $("#panel").innerHTML = `
-    <section class="info-card reference-panel-card">
-      <div class="card-head"><h2>參考網站</h2><span>${all.length} 筆</span></div>
-      <div class="outline-list reference-list-itemized">
-        ${all.map(renderReferenceItem).join("") || `<div class="empty">尚無參考網站</div>`}
-      </div>
-    </section>
-  `;
+  $("#panel").innerHTML = sharedRenderReferencesPanel(all, {
+    showCount: true,
+    typeClass: (type) => eventTypeClass({ type: normalizeTagName(type) }),
+  });
 }
 
 function renderValidationError(errors) {

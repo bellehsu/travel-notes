@@ -1,4 +1,4 @@
-export { normalizePath, nonEmpty, escapeHtml, embedUrl, makeMapTarget, extraFields, renderExtraRows, syncActiveTab } from "./dom-helpers.js";
+export { normalizePath, nonEmpty, escapeHtml, parseLatLngFromText, isGoogleShortUrl, embedUrl, mapEmbedUrl, mapOpenUrl, makeMapTarget, extraFields, renderExtraRows, syncActiveTab } from "./dom-helpers.js";
 export {
   formatMoney,
   formatUnit,

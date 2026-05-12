@@ -16,7 +16,7 @@
       "釜山吃什麼"
     ]
   },
-  "intro": "如果你在排 釜山 時，最容易卡住的是「這一區到底要吃什麼」，這頁就是先幫你把方向整理出來。這裡不是單純丟一串店名，而是優先根據目前已建立的 2 份 trip，把實際有出現的餐廳、用餐區域和動線一起整理，讓你比較容易判斷哪些適合排早餐、哪些適合排晚餐。",
+  "intro": "如果你在排 釜山 時，最容易卡住的是「這一區到底要吃什麼」，這頁就是先幫你把方向整理出來。這裡不是單純丟一串店名，而是優先根據目前已建立的 1 份 trip，把實際有出現的餐廳、用餐區域和動線一起整理，讓你比較容易判斷哪些適合排早餐、哪些適合排晚餐。",
   "highlights": [
     "先看區域，再決定吃什麼，通常比追單一名店更順",
     "優先整理已出現在 trip 裡的餐廳與用餐安排",
@@ -71,27 +71,9 @@
     "title": "餐廳先不用排太滿",
     "body": "先把每日路線看順，再回到完整 trip page 把餐廳放進去，通常比一開始就硬塞名店更好用。",
     "primaryLabel": "查看完整行程",
-    "primaryUrl": "/trips/busan-5d4n-202610/"
+    "primaryUrl": "/trips/busan-5d4n-202604/"
   },
   "featuredTrips": [
-    {
-      "tripSlug": "busan-5d4n-202610",
-      "title": "釜山美食 × 購物 5日行程",
-      "summary": "適合秋季安排的釜山自由行版本，重點放在吃、逛與比較舒服的城市節奏。",
-      "days": 5,
-      "nights": 4,
-      "seasonTags": [
-        "autumn"
-      ],
-      "tags": [
-        "food",
-        "shopping",
-        "autumn",
-        "busan"
-      ],
-      "coverImage": "",
-      "url": "/trips/busan-5d4n-202610/"
-    },
     {
       "tripSlug": "busan-5d4n-202604",
       "title": "釜山櫻花 × 海景 × 購物 5日行程",
@@ -123,12 +105,6 @@
       "title": "釜山預算整理",
       "summary": "先看花費結構，再決定這趟預算要抓到哪裡。",
       "url": "/destinations/kr/busan/budget/"
-    },
-    {
-      "pageSlug": "season-autumn",
-      "title": "秋季釜山",
-      "summary": "從季節出發，看這段時間適合怎麼安排。",
-      "url": "/destinations/kr/busan/season-autumn/"
     },
     {
       "pageSlug": "season-spring",
@@ -221,62 +197,6 @@
       "note": "展覽有折價券可以使用",
       "map": "https://maps.google.com/?q=35.087261314652395,129.07638372656834",
       "tripSlug": "busan-5d4n-202604"
-    },
-    {
-      "name": "豬肉湯飯",
-      "area": "",
-      "note": "適合早餐或晚餐",
-      "map": "",
-      "tripSlug": "busan-5d4n-202610"
-    },
-    {
-      "name": "烤肉",
-      "area": "",
-      "note": "適合排在購物後的晚餐",
-      "map": "",
-      "tripSlug": "busan-5d4n-202610"
-    },
-    {
-      "name": "海鮮餐",
-      "area": "",
-      "note": "適合搭配海邊散步或半日行程",
-      "map": "",
-      "tripSlug": "busan-5d4n-202610"
-    },
-    {
-      "name": "海雲台晚餐",
-      "area": "",
-      "note": "靠近住宿區，第一天走輕鬆版",
-      "map": "",
-      "tripSlug": "busan-5d4n-202610"
-    },
-    {
-      "name": "購物區晚餐",
-      "area": "",
-      "note": "晚餐直接排在逛街區附近",
-      "map": "",
-      "tripSlug": "busan-5d4n-202610"
-    },
-    {
-      "name": "海景午餐",
-      "area": "",
-      "note": "和海邊行程放在一起比較順",
-      "map": "",
-      "tripSlug": "busan-5d4n-202610"
-    },
-    {
-      "name": "咖啡館",
-      "area": "",
-      "note": "中段行程放慢一點",
-      "map": "",
-      "tripSlug": "busan-5d4n-202610"
-    },
-    {
-      "name": "晚餐",
-      "area": "",
-      "note": "依體力彈性安排",
-      "map": "",
-      "tripSlug": "busan-5d4n-202610"
     }
   ]
 }

@@ -61,7 +61,7 @@
   "hero": {
     "title": "釜山自由行規劃",
     "subtitle": "行程、餐廳、預算與季節玩法整理",
-    "coverImage": "",
+    "coverImage": "https://travel-img.omnixaas.com/busan-5d4n-202604/20260403_161316.jpg",
     "coverAlt": "釜山城市旅遊"
   },
   "intro": "排釜山自由行最容易遇到的問題，通常不是景點不夠，而是選項太多：海景要排多少、購物要放哪一天、住海雲台還是靠鬧區比較順、餐廳到底要先查到多細。\n\n所以這裡不是要一次塞給你很多資訊，而是先把規劃釜山最常用到的幾個入口整理好。你可以先看推薦行程，再看餐廳、預算或季節頁，最後回到完整 trip page，把每天怎麼走一次看清楚。",
@@ -157,24 +157,6 @@
   ],
   "featuredTrips": [
     {
-      "tripSlug": "busan-5d4n-202610",
-      "title": "釜山美食 × 購物 5日行程",
-      "summary": "適合秋季安排的釜山自由行版本，重點放在吃、逛與比較舒服的城市節奏。",
-      "days": 5,
-      "nights": 4,
-      "seasonTags": [
-        "autumn"
-      ],
-      "tags": [
-        "food",
-        "shopping",
-        "autumn",
-        "busan"
-      ],
-      "coverImage": "",
-      "url": "/trips/busan-5d4n-202610/"
-    },
-    {
       "tripSlug": "busan-5d4n-202604",
       "title": "釜山櫻花 × 海景 × 購物 5日行程",
       "summary": "春季釜山自由行",
@@ -211,12 +193,6 @@
       "title": "釜山預算整理",
       "summary": "先看花費結構，再決定這趟預算要抓到哪裡。",
       "url": "/destinations/kr/busan/budget/"
-    },
-    {
-      "pageSlug": "season-autumn",
-      "title": "秋季釜山",
-      "summary": "從季節出發，看這段時間適合怎麼安排。",
-      "url": "/destinations/kr/busan/season-autumn/"
     },
     {
       "pageSlug": "season-spring",

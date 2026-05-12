@@ -18,7 +18,7 @@
   },
   "intro": "這頁比較像 釜山 行程的入口。比起一開始就鑽進某一份 trip 的細節，先從這裡看不同版本怎麼排、幾天比較適合、哪些安排比較符合你的節奏，通常會比較省時間。尤其如果你還在猶豫要排幾天，先看這頁會比直接看單篇行程更有方向。",
   "highlights": [
-    "目前已整理 2 種 釜山 trip 版本",
+    "目前已整理 1 種 釜山 trip 版本",
     "適合先比較天數與節奏，再進單一行程",
     "先抓大方向，不必一開始就看很細"
   ],
@@ -38,7 +38,6 @@
       "title": "目前可參考的行程版本",
       "summary": "釜山 現在已整理的 trip，都可以先從這裡快速比較。",
       "bullets": [
-        "釜山美食 × 購物 5日行程｜5天｜4晚｜季節：autumn｜主題：food, shopping, autumn",
         "釜山櫻花 × 海景 × 購物 5日行程｜5天｜4晚｜季節：spring｜主題：釜山, 櫻花, 海景"
       ]
     },
@@ -86,27 +85,9 @@
     "title": "先挑一個最接近你的版本",
     "body": "不用一開始就追求完美行程，先選一份最接近你的天數與節奏，再進完整 trip page 微調會更快。",
     "primaryLabel": "查看推薦行程",
-    "primaryUrl": "/trips/busan-5d4n-202610/"
+    "primaryUrl": "/trips/busan-5d4n-202604/"
   },
   "featuredTrips": [
-    {
-      "tripSlug": "busan-5d4n-202610",
-      "title": "釜山美食 × 購物 5日行程",
-      "summary": "適合秋季安排的釜山自由行版本，重點放在吃、逛與比較舒服的城市節奏。",
-      "days": 5,
-      "nights": 4,
-      "seasonTags": [
-        "autumn"
-      ],
-      "tags": [
-        "food",
-        "shopping",
-        "autumn",
-        "busan"
-      ],
-      "coverImage": "",
-      "url": "/trips/busan-5d4n-202610/"
-    },
     {
       "tripSlug": "busan-5d4n-202604",
       "title": "釜山櫻花 × 海景 × 購物 5日行程",
@@ -138,12 +119,6 @@
       "title": "釜山預算整理",
       "summary": "先看花費結構，再決定這趟預算要抓到哪裡。",
       "url": "/destinations/kr/busan/budget/"
-    },
-    {
-      "pageSlug": "season-autumn",
-      "title": "秋季釜山",
-      "summary": "從季節出發，看這段時間適合怎麼安排。",
-      "url": "/destinations/kr/busan/season-autumn/"
     },
     {
       "pageSlug": "season-spring",
