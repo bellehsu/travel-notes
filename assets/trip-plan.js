@@ -1,6 +1,5 @@
-import { defaultDayLabel, makeScheduleRows, schedulePositionPercent, scheduleEventTypeClass, renderSchedulePanel as sharedRenderSchedulePanel, renderLeafletLocationsShared, priceLabel, durationLabel, renderDetailCard as sharedRenderDetailCard, renderMapFocus as sharedRenderMapFocus, collectDayMapLocations, tagsForMapStop, visibleMapLocations as sharedVisibleMapLocations, isFavoriteMapLocation, renderMapPanelShell, renderMapListHtml, renderReminderListHtml, renderReferencesPanel as sharedRenderReferencesPanel } from "./trip-render.js";
+import { defaultDayLabel, makeScheduleRows, schedulePositionPercent, scheduleEventTypeClass, renderSchedulePanel as sharedRenderSchedulePanel, renderLeafletLocationsShared, priceLabel, durationLabel, formatTripMoney, renderMapFocus as sharedRenderMapFocus, mapCenterFromTripData, collectDayMapLocations, tagsForMapStop, visibleMapLocations as sharedVisibleMapLocations, isFavoriteMapLocation, renderMapPanelShell, renderMapListHtml, renderBudgetSummaryHtml, renderReminderDashboardHtml, renderTripShellHtml, bindMainTabControls, renderGoogleMapFrame, renderReferencesPanel as sharedRenderReferencesPanel } from "./trip-render.js";
 import { escapeHtml as esc, mapEmbedUrl, mapOpenUrl } from "./dom-helpers.js";
-import { formatMoney } from "./formatters.js";
 import { timeToMinutes } from "./trip-normalizers.js";
 const STORAGE_KEY = "foodnetravel.tripPlan.v2";
 const LEGACY_STORAGE_KEY = "foodnetravel.tripPlan.v1";
@@ -262,40 +261,6 @@ function mapDayTabLabel(day, index) {
   return dayLabel(day, index);
 }
 
-function leafletReady() {
-  return typeof window !== "undefined" && window.L && typeof window.L.map === "function";
-}
-
-let leafletLoadPromise = null;
-
-function ensureLeafletLoaded() {
-  if (leafletReady()) return Promise.resolve();
-  if (leafletLoadPromise) return leafletLoadPromise;
-  leafletLoadPromise = new Promise((resolve, reject) => {
-    if (!document.querySelector("link[data-trip-leaflet-css]")) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-      link.dataset.tripLeafletCss = "1";
-      document.head.appendChild(link);
-    }
-    const existing = document.querySelector("script[data-trip-leaflet-js]");
-    if (existing) {
-      existing.addEventListener("load", resolve, { once: true });
-      existing.addEventListener("error", reject, { once: true });
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-    script.defer = true;
-    script.dataset.tripLeafletJs = "1";
-    script.onload = resolve;
-    script.onerror = () => reject(new Error("Leaflet 載入失敗"));
-    document.head.appendChild(script);
-  });
-  return leafletLoadPromise;
-}
-
 function resetLeaflet() {
   if (!state.leafletMap) return;
   try { state.leafletMap.remove(); } catch {}
@@ -308,23 +273,7 @@ function setMapCanvasMode(mode) {
 }
 
 function defaultMapCenter() {
-  const center = state.data?.defaults?.map_center;
-  const lat = Number(center?.lat);
-  const lng = Number(center?.lng);
-  const zoom = Number(state.data?.defaults?.map_zoom || state.data?.defaults?.zoom || DEFAULT_MAP_ZOOM);
-  if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng, zoom: Number.isFinite(zoom) ? zoom : DEFAULT_MAP_ZOOM };
-  return DEFAULT_MAP_CENTER;
-}
-
-function numberedIcon(number, extraClass = "") {
-  if (!leafletReady()) return undefined;
-  return L.divIcon({
-    className: "trip-div-icon",
-    html: `<div class="num-marker ${extraClass}"><span>${esc(number)}</span></div>`,
-    iconSize: [34, 34],
-    iconAnchor: [17, 34],
-    popupAnchor: [0, -30],
-  });
+  return mapCenterFromTripData(state.data, DEFAULT_MAP_CENTER, { defaultZoom: DEFAULT_MAP_ZOOM });
 }
 
 function headerBudgetText() {
@@ -366,58 +315,49 @@ function buildEvents(day, dayIndex) {
 
 function render() {
   const app = $("#app");
-  app.innerHTML = `
-    <div class="mobile-topbar">
-      <button class="mobile-menu-btn" type="button" aria-label="切換選單">☰</button>
-      <strong>${esc(state.data.title)}</strong>
-    </div>
-    <main class="wrap">
-      <section class="hero">
-        <div>
-          <div class="kicker">Trip Planner</div>
-          <h1 id="title">${esc(state.data.title)}</h1>
-          <p id="subtitle">${esc(state.data.subtitle || "規劃時程、提醒、參考網站與地圖資訊。")}</p>
-          <div class="tags" id="tags">${(state.data.tags || []).map((tag) => `<span class="badge">${esc(tag)}</span>`).join("")}</div>
-          <div class="trip-plan-hero-actions">
-            <button class="btn secondary" type="button" data-edit-hero>修改資訊</button>
-            <button class="btn secondary" type="button" data-import-json>Import JSON</button>
-            <button class="btn secondary" type="button" data-export-json>Export JSON</button>
-          </div>
-        </div>
-        <div class="meta">
-          <div class="box"><span>日期</span><strong>${esc(state.data.dates || "-")}</strong></div>
-          <div class="box"><span>人數</span><strong>${travelersText()}</strong></div>
-          <div class="box"><span>預算</span><strong>${headerBudgetText()}</strong></div>
-          <div class="box"><span>住宿</span><strong>${esc(state.data.nights || `${state.data.days.length} Days`)}</strong></div>
-        </div>
-      </section>
-
-      <nav class="main-tabs" id="mainTabs" aria-label="行程規劃分頁">
-        <button class="main-tab ${state.activeMain === "schedule" ? "active" : ""}" data-main="schedule">行程表</button>
-        <button class="main-tab ${state.activeMain === "reminders" ? "active" : ""}" data-main="reminders">行前提醒</button>
-        <button class="main-tab ${state.activeMain === "references" ? "active" : ""}" data-main="references">參考網站</button>
-        <button class="main-tab ${state.activeMain === "map" ? "active" : ""}" data-main="map">地圖資訊</button>
-      </nav>
-
-      <section class="panel" id="panel"></section>
+  app.innerHTML = renderTripShellHtml({
+    data: state.data,
+    activeMain: state.activeMain,
+    kicker: "Trip Planner",
+    title: state.data.title,
+    subtitle: state.data.subtitle || "規劃時程、提醒、參考網站與地圖資訊。",
+    heroActionsHtml: `
+      <div class="trip-plan-hero-actions">
+        <button class="btn secondary" type="button" data-edit-hero>修改資訊</button>
+        <button class="btn secondary" type="button" data-import-json>Import JSON</button>
+        <button class="btn secondary" type="button" data-export-json>Export JSON</button>
+      </div>
+    `,
+    tabs: [
+      { key: "schedule", label: "行程表" },
+      { key: "reminders", label: "行前提醒" },
+      { key: "references", label: "參考網站" },
+      { key: "map", label: "地圖資訊" },
+    ],
+    meta: [
+      { label: "日期", value: state.data.dates || "-" },
+      { label: "人數", value: travelersText() },
+      { label: "預算", value: headerBudgetText() },
+      { label: "住宿", value: state.data.nights || `${state.data.days.length} Days` },
+    ],
+    navLabel: "行程規劃分頁",
+    afterPanelHtml: `
       <div id="planModalHost"></div>
       <input class="trip-plan-file" type="file" accept="application/json,.json" data-import-input>
-    </main>
-  `;
+    `,
+  });
   bindShell();
   renderActivePanel();
 }
 
 function bindShell() {
-  $$(".main-tab").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.activeMain = button.dataset.main;
+  bindMainTabControls({
+    rerenderOnChange: true,
+    onChange: (key) => {
+      state.activeMain = key;
       render();
-      if (window.matchMedia("(max-width: 700px)").matches) window.scrollTo({ top: 0, behavior: "smooth" });
-    });
+    },
   });
-  const menuButton = $(".mobile-menu-btn");
-  if (menuButton) menuButton.addEventListener("click", () => $("#mainTabs").classList.toggle("open"));
   const editHeroButton = $("[data-edit-hero]");
   const importButton = $("[data-import-json]");
   const exportButton = $("[data-export-json]");
@@ -800,22 +740,13 @@ function openEventModal(dayIndex, stopIndex, start, end) {
 }
 
 function renderReminderPanel() {
-  $("#panel").innerHTML = `
-    <div class="reminder-grid reminder-grid-two">
-      <section class="info-card trip-plan-section-card">
-        <div class="card-head">
-          <h2>行前提醒</h2>
-        </div>
-        ${renderReminderListHtml(state.data.reminders, { editable: true, emptyText: "", addLabel: "" })}
-      </section>
-      <section class="info-card trip-plan-section-card">
-        <div class="card-head">
-          <h2>預算摘要</h2>
-        </div>
-        ${renderBudgetSummaryPanel()}
-      </section>
-    </div>
-  `;
+  $("#panel").innerHTML = renderReminderDashboardHtml({
+    reminders: state.data.reminders,
+    editableReminders: true,
+    reminderOptions: { emptyText: "", addLabel: "" },
+    budgetHtml: renderBudgetSummaryPanel(),
+    sectionClass: "info-card trip-plan-section-card",
+  });
   $("[data-add-reminder]").addEventListener("click", () => openReminderModal(null));
   $$("[data-edit-reminder]").forEach((button) => button.addEventListener("click", () => openReminderModal(Number(button.dataset.editReminder))));
   $$("[data-remove-reminder]").forEach((button) => button.addEventListener("click", () => {
@@ -835,52 +766,18 @@ function renderReminderPanel() {
 function renderBudgetSummaryPanel() {
   state.data.budget_items = normalizeBudgetItems(state.data.budget_items);
   const items = state.data.budget_items || [];
-  const total = items.reduce((sum, item) => sum + Number(item.value || 0), 0);
   const active = state.activeBudgetCategory || "__total__";
   if (active !== "__total__" && !items.some((item) => item.label === active)) state.activeBudgetCategory = "__total__";
-  if (state.activeBudgetCategory === "__total__") {
-    return `
-      ${renderBudgetTabs(items)}
-      <div class="budget-total-card">
-        <div class="budget-summary-row"><strong>Total</strong><span>${formatCurrency(total)}</span></div>
-        ${items.map((item) => `<div class="details-row"><strong>${esc(item.label)}</strong><span>${formatCurrency(item.value || 0)}</span></div>`).join("")}
-      </div>
-    `;
-  }
-  const item = items.find((budgetItem) => budgetItem.label === state.activeBudgetCategory) || items[0];
-  if (!item) return `<div class="empty">尚無預算資料</div>`;
-  const index = items.indexOf(item);
-  const value = Number(item.value || 0);
-  const share = total ? Math.round((value / total) * 100) : 0;
-  const details = Array.isArray(item.details) ? item.details : [];
-  return `
-    ${renderBudgetTabs(items)}
-    <div class="budget-total-card">
-      <div class="budget-summary-row"><strong>${esc(item.label)}</strong><span>${formatCurrency(value)}</span></div>
-      <div class="budget-bar"><div style="width:${Math.max(0, Math.min(100, share))}%"></div></div>
-      <div class="small muted budget-share">Share: ${share}%</div>
-      <div class="details-wrap">
-        ${details.map((detail) => `<div class="details-row"><strong>${esc(detail.name || "細項")}</strong><span>${formatCurrency(detail.amount || 0)}</span></div>`).join("") || `<div class="empty compact"></div>`}
-      </div>
-      <button class="btn secondary trip-plan-budget-edit-action" type="button" data-budget-index="${index}">編輯${esc(item.label)}預算</button>
-    </div>
-  `;
-}
-
-function renderBudgetTabs(items) {
-  const active = state.activeBudgetCategory || "__total__";
-  return `
-    <div class="budget-tabs">
-      <button class="tag-filter-btn ${active === "__total__" ? "active" : ""}" type="button" data-budget-tag="__total__">Total</button>
-      ${items.map((item) => `<button class="tag-filter-btn ${active === item.label ? "active" : ""}" type="button" data-budget-tag="${esc(item.label)}">${esc(item.label)}</button>`).join("")}
-    </div>
-  `;
+  return renderBudgetSummaryHtml(items, {
+    activeCategory: state.activeBudgetCategory,
+    formatCurrency,
+    editable: true,
+    emptyText: "",
+  });
 }
 
 function formatCurrency(value, data = state.data) {
-  const currency = data?.defaults?.currency || "TWD";
-  const locale = data?.defaults?.locale || "zh-TW";
-  return formatMoney(value, currency, locale);
+  return formatTripMoney(value, data);
 }
 
 function openReminderModal(index) {
@@ -1330,10 +1227,14 @@ function fallbackPlanMapUrl() {
 }
 
 function renderGoogleIframe(url) {
-  setMapCanvasMode("iframe");
-  resetLeaflet();
-  const frame = $("#planMapFrame");
-  if (frame) frame.src = url || fallbackPlanMapUrl();
+  renderGoogleMapFrame({
+    frameId: "planMapFrame",
+    url,
+    fallbackUrl: fallbackPlanMapUrl(),
+    setCanvasMode: setMapCanvasMode,
+    resetMap: resetLeaflet,
+    shouldEmbed: false,
+  });
 }
 
 function renderLeafletLocations(locations, options = {}) {

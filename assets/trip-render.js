@@ -1,4 +1,4 @@
-import { escapeHtml as esc, nonEmpty } from "./dom-helpers.js";
+import { escapeHtml as esc, nonEmpty, embedUrl } from "./dom-helpers.js";
 import { formatMoney } from "./formatters.js";
 
 const DEFAULT_TILE_PROVIDER = {
@@ -228,6 +228,11 @@ export function priceLabel(price, dataOrDefaults = {}) {
   return "";
 }
 
+export function formatTripMoney(value, dataOrDefaults = {}) {
+  const defaults = dataOrDefaults?.defaults || dataOrDefaults || {};
+  return formatMoney(value, defaults.currency || "TWD", defaults.locale || "zh-TW");
+}
+
 export function renderDetailCard(loc, options = {}) {
   const {
     activeId = "",
@@ -269,6 +274,22 @@ function addressTextForMap(address) {
 
 export function renderMapFocus(loc, options = {}) {
   return renderDetailCard(loc, { ...options, mapFocus: true });
+}
+
+export function mapCenterFromTripData(data, fallback, options = {}) {
+  const { includeRootLatLng = false, defaultZoom = fallback?.zoom || 13 } = options;
+  const center = data?.defaults?.map_center;
+  const zoom = Number(data?.defaults?.map_zoom ?? data?.defaults?.zoom ?? defaultZoom);
+  const normalizedZoom = Number.isFinite(zoom) ? zoom : defaultZoom;
+  const lat = Number(center?.lat);
+  const lng = Number(center?.lng);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng, zoom: normalizedZoom };
+  if (includeRootLatLng) {
+    const rootLat = Number(data?.lat);
+    const rootLng = Number(data?.lng);
+    if (Number.isFinite(rootLat) && Number.isFinite(rootLng)) return { lat: rootLat, lng: rootLng, zoom: normalizedZoom };
+  }
+  return fallback;
 }
 
 export function renderScheduleDetailModal(detail = {}) {
@@ -587,6 +608,170 @@ export function renderReminderListHtml(reminders = [], options = {}) {
       </div>
     </div>
   `;
+}
+
+export function renderBudgetSummaryHtml(items = [], options = {}) {
+  const {
+    activeCategory = "__total__",
+    tabAttr = "data-budget-tag",
+    formatCurrency = (value) => String(value ?? ""),
+    detailAmount = (detail) => detail?.amount ?? detail?.price ?? 0,
+    detailLabel = (detail) => detail?.name || "細項",
+    detailValue = (detail) => formatCurrency(detailAmount(detail)),
+    editable = false,
+    editAttr = "data-budget-index",
+    editLabel = (item) => `編輯${item?.label || ""}預算`,
+    emptyText = "沒有細項",
+  } = options;
+  const list = Array.isArray(items) ? items : [];
+  const active = activeCategory || "__total__";
+  const total = list.reduce((sum, item) => sum + Number(item?.value || 0), 0);
+  const tabs = `
+    <div class="budget-tabs">
+      <button class="tag-filter-btn ${active === "__total__" ? "active" : ""}" type="button" ${tabAttr}="__total__">Total</button>
+      ${list.map((item) => `<button class="tag-filter-btn ${active === item.label ? "active" : ""}" type="button" ${tabAttr}="${esc(item.label)}">${esc(item.label)}</button>`).join("")}
+    </div>
+  `;
+
+  if (active === "__total__" || !list.length) {
+    return `
+      ${tabs}
+      <div class="budget-total-card">
+        <div class="budget-summary-row"><strong>Total</strong><span>${formatCurrency(total)}</span></div>
+        ${list.map((item) => `<div class="details-row"><strong>${esc(item.label)}</strong><span>${formatCurrency(item.value || 0)}</span></div>`).join("") || `<div class="empty compact">${esc(emptyText)}</div>`}
+      </div>
+    `;
+  }
+
+  const item = list.find((budgetItem) => budgetItem.label === active) || list[0];
+  const index = list.indexOf(item);
+  const value = Number(item?.value || 0);
+  const share = total ? Math.round((value / total) * 100) : 0;
+  const details = Array.isArray(item?.details) ? item.details : [];
+  return `
+    ${tabs}
+    <div class="budget-total-card">
+      <div class="budget-summary-row"><strong>${esc(item.label)}</strong><span>${formatCurrency(value)}</span></div>
+      <div class="budget-bar"><div style="width:${Math.max(0, Math.min(100, share))}%"></div></div>
+      <div class="small muted budget-share">Share: ${share}%</div>
+      <div class="details-wrap">
+        ${details.map((detail) => `<div class="details-row"><strong>${esc(detailLabel(detail))}</strong><span>${esc(detailValue(detail))}</span></div>`).join("") || `<div class="empty compact">${esc(emptyText)}</div>`}
+      </div>
+      ${editable ? `<button class="btn secondary trip-plan-budget-edit-action" type="button" ${editAttr}="${index}">${esc(editLabel(item, index))}</button>` : ""}
+    </div>
+  `;
+}
+
+export function renderReminderDashboardHtml(options = {}) {
+  const {
+    reminders = [],
+    reminderTitle = "行前提醒",
+    reminderHtml = "",
+    budgetTitle = "預算摘要",
+    budgetHtml = "",
+    editableReminders = false,
+    reminderOptions = {},
+    sectionClass = "info-card",
+  } = options;
+  const cardHead = (title) => `<div class="card-head"><h2>${esc(title)}</h2></div>`;
+  return `
+    <div class="reminder-grid reminder-grid-two">
+      <section class="${esc(sectionClass)}">
+        ${sectionClass.includes("trip-plan-section-card") ? cardHead(reminderTitle) : `<h2>${esc(reminderTitle)}</h2>`}
+        ${reminderHtml || renderReminderListHtml(reminders, { editable: editableReminders, ...reminderOptions })}
+      </section>
+      <section class="${esc(sectionClass)}">
+        ${sectionClass.includes("trip-plan-section-card") ? cardHead(budgetTitle) : `<h2>${esc(budgetTitle)}</h2>`}
+        ${budgetHtml}
+      </section>
+    </div>
+  `;
+}
+
+export function renderTripShellHtml(options = {}) {
+  const {
+    data = {},
+    activeMain = "",
+    kicker = "Travel Plan",
+    title = data.title || "",
+    subtitle = data.subtitle || data.summary || "",
+    tags = data.tags || [],
+    tabs = [],
+    meta = [],
+    heroActionsHtml = "",
+    panelId = "panel",
+    navLabel = "旅遊資訊分頁",
+    afterPanelHtml = "",
+  } = options;
+  return `
+    <div class="mobile-topbar">
+      <button class="mobile-menu-btn" type="button" aria-label="切換選單">☰</button>
+      <strong>${esc(title)}</strong>
+    </div>
+    <main class="wrap">
+      <section class="hero">
+        <div>
+          <div class="kicker">${esc(kicker)}</div>
+          <h1 id="title">${esc(title)}</h1>
+          <p id="subtitle">${esc(subtitle)}</p>
+          <div class="tags" id="tags">${tags.map((tag) => `<span class="badge">${esc(tag)}</span>`).join("")}</div>
+          ${heroActionsHtml}
+        </div>
+        <div class="meta">
+          ${meta.map((item) => `<div class="box"><span>${esc(item.label)}</span><strong>${esc(item.value ?? "-")}</strong></div>`).join("")}
+        </div>
+      </section>
+
+      <nav class="main-tabs" id="mainTabs" aria-label="${esc(navLabel)}">
+        ${tabs.map((tab) => `<button class="main-tab ${String(activeMain) === String(tab.key) ? "active" : ""}" data-main="${esc(tab.key)}">${esc(tab.label)}</button>`).join("")}
+      </nav>
+
+      <section class="panel" id="${esc(panelId)}"></section>
+      ${afterPanelHtml}
+    </main>
+  `;
+}
+
+export function bindMainTabControls(options = {}) {
+  const {
+    tabSelector = ".main-tab",
+    menuSelector = ".mobile-menu-btn",
+    tabsContainerSelector = "#mainTabs",
+    activeClass = "active",
+    onChange = () => {},
+    updateActiveClass = true,
+    rerenderOnChange = false,
+  } = options;
+  document.querySelectorAll(tabSelector).forEach((button) => {
+    button.addEventListener("click", () => {
+      const key = button.dataset.main;
+      if (updateActiveClass && !rerenderOnChange) {
+        document.querySelectorAll(tabSelector).forEach((item) => item.classList.toggle(activeClass, item === button));
+      }
+      onChange(key, button);
+      if (window.matchMedia("(max-width: 700px)").matches) window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+  document.querySelector(menuSelector)?.addEventListener("click", () => {
+    document.querySelector(tabsContainerSelector)?.classList.toggle("open");
+  });
+}
+
+export function renderGoogleMapFrame(options = {}) {
+  const {
+    frameId = "mapFrame",
+    url = "",
+    fallbackUrl = "",
+    setCanvasMode = () => {},
+    resetMap = () => {},
+    shouldEmbed = true,
+  } = options;
+  setCanvasMode("iframe");
+  resetMap();
+  const frame = document.getElementById(frameId);
+  if (!frame) return;
+  const value = nonEmpty(url) ? String(url) : fallbackUrl;
+  frame.src = shouldEmbed && !/[?&]output=embed\b/.test(value) ? embedUrl(value) : value;
 }
 
 export function referenceTitle(ref) {
