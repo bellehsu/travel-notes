@@ -15,7 +15,7 @@
   },
   "dates": "2026-05",
   "travelers": 4,
-  "budget_per_person": 17100,
+  "budget_per_person": 18000,
   "nights": "屏東 3 晚",
   "tags": [
     "小琉球",
@@ -74,15 +74,15 @@
           "start_time": "11:40",
           "duration_min": 110,
           "address": "華僑市場",
-          "map": "https://maps.app.goo.gl/s4bBRP7B16xCQfZr7",
+          "map": "https://maps.google.com/?q=22.46815839976465,120.44333072870971",
           "note": "需要有人先去換船票",
           "price": {
             "min": 500,
             "max": 1000
           },
           "highlight": true,
-          "lat": 22.46855143147794,
-          "lng": 120.44331769999998
+          "lat": 22.46815839976465,
+          "lng": 120.44333072870971
         },
         {
           "id": "stop-mpc1zbwu-s2eys5",
@@ -157,10 +157,6 @@
           "address": "",
           "map": "",
           "note": "",
-          "price": {
-            "min": 500,
-            "max": 1000
-          },
           "highlight": false
         },
         {
@@ -190,7 +186,7 @@
           "name": "早餐",
           "type": "餐飲",
           "start_time": "07:00",
-          "duration_min": 60,
+          "duration_min": 40,
           "address": "",
           "map": "",
           "note": "",
@@ -203,15 +199,11 @@
           "id": "stop-mpe6uxxp-1bkv9t",
           "name": "岸潛複習 (Bruce&Claudia)",
           "type": "活動",
-          "start_time": "08:00",
+          "start_time": "07:50",
           "duration_min": 120,
           "address": "",
           "map": "",
           "note": "",
-          "price": {
-            "min": 2400,
-            "max": 3000
-          },
           "highlight": false
         },
         {
@@ -265,7 +257,7 @@
           "name": "晚餐",
           "type": "餐飲",
           "start_time": "19:00",
-          "duration_min": 120,
+          "duration_min": 80,
           "address": "",
           "map": "",
           "note": "",
@@ -278,8 +270,8 @@
           "id": "stop-mpc2dtq5-jiww3u",
           "name": "星空導覽",
           "type": "活動",
-          "start_time": "20:30",
-          "duration_min": 60,
+          "start_time": "20:20",
+          "duration_min": 70,
           "address": "",
           "map": "",
           "note": "海盜SUP 附贈",
@@ -329,10 +321,6 @@
           "address": "",
           "map": "https://maps.app.goo.gl/r1qoNiYNDM3ek8cV7",
           "note": "鬼頭刀、炒螺肉、南瓜海鮮鍋",
-          "price": {
-            "min": 200,
-            "max": 400
-          },
           "highlight": false,
           "lat": 22.35060969301593,
           "lng": 120.38157403521207
@@ -346,9 +334,6 @@
           "address": "",
           "map": "https://maps.app.goo.gl/3of1shoztM8rDLsb8",
           "note": "9:50, 11:20, 12:50, 14:30提前 30 分鐘報到，船程約 30 分鐘",
-          "price": {
-            "min": 200
-          },
           "highlight": false,
           "lat": 22.35210163565844,
           "lng": 120.38457960674017
@@ -373,9 +358,6 @@
           "address": "",
           "map": "",
           "note": "精華遊 (約 1.5 小時)： 參觀 1 樓的沉浸式劇場（約 15 分鐘）與 3 樓的懸掛式王船，快速瀏覽王船建造工藝與東港文化介紹。\n深度遊 (約 2 - 3 小時)： 仔細參觀各層展區、欣賞互動投影、在館內拍照，並包含一樓誠品書店及用餐時間。\n休閒遊 (約 3 - 4 小時)： 完整體驗所有互動裝置、至頂樓瞭望台俯瞰大鵬灣美景、在附設的漁行口食堂享用東港在地美食。",
-          "price": {
-            "min": 120
-          },
           "highlight": false
         },
         {
@@ -387,9 +369,6 @@
           "address": "",
           "map": "",
           "note": "",
-          "price": {
-            "min": 1500
-          },
           "highlight": false
         },
         {
@@ -477,22 +456,22 @@
           "start_time": "15:00",
           "duration_min": 90,
           "address": "華僑市場",
-          "map": "https://maps.app.goo.gl/dK2PJywKqBHinW54A",
+          "map": "https://maps.google.com/?q=22.46815839976465,120.44333072870971",
           "note": "",
           "highlight": false,
           "transit_to_next_min": 30,
-          "lat": 22.46855143147794,
-          "lng": 120.44331769999998
+          "lat": 22.46815839976465,
+          "lng": 120.44333072870971
         },
         {
           "id": "stop-mpc1zbwu-3qscuq",
           "name": "東港 → 左營",
           "type": "交通",
-          "start_time": "17:00",
-          "duration_min": 60,
+          "start_time": "16:35",
+          "duration_min": 65,
           "address": "",
           "map": "https://maps.app.goo.gl/mZMFVPp4CfLekpFv6",
-          "note": "15:00, 16:45, 17:00",
+          "note": "15:38, 16:38, 17:08",
           "price": {
             "min": 122,
             "max": 300
@@ -506,7 +485,7 @@
           "id": "stop-mpc1zbwu-pncwx8",
           "name": "晚餐",
           "type": "餐飲",
-          "start_time": "18:20",
+          "start_time": "18:00",
           "duration_min": 30,
           "address": "",
           "map": "",
@@ -522,7 +501,7 @@
           "name": "左營 → 台北 / 南港高鐵",
           "type": "交通",
           "start_time": "18:55",
-          "duration_min": 120,
+          "duration_min": 105,
           "address": "",
           "map": "https://maps.app.goo.gl/hG4MYA31Tefh3YCd9",
           "note": "",
@@ -662,28 +641,28 @@
       "id": "budget-mpc1zbwv-w9zkuz",
       "key": "activity",
       "label": "活動",
-      "value": 4500,
+      "value": 5000,
       "details": [
         {
-          "id": "budget-detail-mpc1zbwv-st62ok",
+          "id": "budget-detail-mpc1zbwv-xlf4p3",
           "name": "水肺潛水",
           "amount": 2400,
           "note": "體驗價"
         },
         {
-          "id": "budget-detail-mpc1zbwv-ect9tk",
+          "id": "budget-detail-mpc1zbwv-st62ok",
           "name": "SUP+浮潛",
           "amount": 1100,
           "note": ""
         },
         {
-          "id": "budget-detail-mpc1zbwv-xlf4p3",
+          "id": "budget-detail-mpc1zbwv-ect9tk",
           "name": "獨木舟",
           "amount": 500,
           "note": ""
         },
         {
-          "id": "budget-detail-mpc1zbwv-9l7h8s",
+          "id": "budget-detail-mpfntj86-hq7824",
           "name": "水上腳踏車",
           "amount": 1000,
           "note": ""
@@ -853,13 +832,13 @@
     {
       "id": "shop-mpc1zbwv-ljy3e6",
       "tag": "餐飲",
-      "name": "王匠黑鮪魚(228)",
+      "name": "王匠黑鮪魚",
       "address": "",
-      "map": "https://maps.app.goo.gl/2CxcgNdFgv2Uo7HK6",
+      "map": "https://maps.google.com/?q=22.46815839976465,120.44333072870971",
       "url": "",
       "note": "東港黑鮪魚推薦",
-      "lat": 22.468501839015595,
-      "lng": 120.4433713416335,
+      "lat": 22.46815839976465,
+      "lng": 120.44333072870971,
       "price": {
         "min": 500,
         "max": 1500
@@ -868,13 +847,13 @@
     {
       "id": "shop-mpc1zbwv-pgfg82",
       "tag": "餐飲",
-      "name": "曾鮮黑鮪魚專賣店(220, 221)",
+      "name": "曾鮮黑鮪魚專賣店",
       "address": "",
-      "map": "https://maps.app.goo.gl/ujkT4RJkurEodoqb6",
+      "map": "https://www.google.com/maps/place/%E6%9D%B1%E6%B8%AF%E7%94%9F%E9%AD%9A%E7%89%87+%E6%9B%BE%E9%AE%AE%E9%BB%91%E9%AE%AA%E9%AD%9A%E5%B0%88%E8%B3%A3%E5%BA%97/@22.4681077,120.4251831,15z/data=!3m2!4b1!5s0x3471e18ede10c78d:0x1c333b4a7d7aa251!4m6!3m5!1s0x3471e18588b1fab1:0xc9038a0c4869b073!8m2!3d22.4681087!4d120.4436369!16s%2Fg%2F11b781b38h?entry=ttu&g_ep=EgoyMDI2MDUxMy4wIKXMDSoASAFQAw%3D%3D",
       "url": "",
       "note": "東港黑鮪魚推薦",
-      "lat": 22.468356487548146,
-      "lng": 120.4436261545681,
+      "lat": 22.4681087,
+      "lng": 120.4436369,
       "price": {
         "min": 500,
         "max": 1200
@@ -885,7 +864,7 @@
       "tag": "餐飲",
       "name": "國珍海產店",
       "address": "",
-      "map": "https://maps.app.goo.gl/orhktqsFHjDEfT257",
+      "map": "https://maps.google.com/?q=22.46533074901569,120.45029961038996",
       "url": "",
       "note": "",
       "lat": 22.46533074901569,
@@ -900,7 +879,7 @@
       "tag": "餐飲",
       "name": "大鵬灣珍珍海鮮",
       "address": "",
-      "map": "https://maps.app.goo.gl/nkgcd4hhAXPV7tru9",
+      "map": "https://maps.google.com/?q=22.460257269743977,120.45666721094909",
       "url": "",
       "note": "",
       "lat": 22.460257269743977,
@@ -915,7 +894,7 @@
       "tag": "餐飲",
       "name": "東昇餐廳",
       "address": "",
-      "map": "https://maps.app.goo.gl/BZHqcVGGKaC9xzrV9",
+      "map": "https://maps.google.com/?q=22.46781059779105,120.45305512629126",
       "url": "",
       "note": "",
       "lat": 22.46781059779105,
@@ -930,7 +909,7 @@
       "tag": "餐飲",
       "name": "東港夜市",
       "address": "",
-      "map": "https://maps.app.goo.gl/R3HWkCvLo2ba36ss8",
+      "map": "https://maps.google.com/?q=22.46861296769834,120.45937923978445",
       "url": "",
       "note": "週三、週六營業",
       "lat": 22.46861296769834,
@@ -945,7 +924,7 @@
       "tag": "餐飲",
       "name": "林記肉粿",
       "address": "",
-      "map": "https://maps.app.goo.gl/NFk4Kye6T2E1wuAT9",
+      "map": "https://maps.google.com/?q=22.46542049426323,120.45106439219455",
       "url": "",
       "note": "07:30–15:30",
       "lat": 22.46542049426323,
@@ -960,7 +939,7 @@
       "tag": "餐飲",
       "name": "葉家肉粿",
       "address": "",
-      "map": "https://maps.app.goo.gl/BqEZKmbknpRNDcwJ6",
+      "map": "https://maps.google.com/?q=22.46509331115388,120.44891862508962",
       "url": "",
       "note": "09:30–16:30",
       "lat": 22.46509331115388,
@@ -975,7 +954,7 @@
       "tag": "餐飲",
       "name": "陳記肉粿-虱目魚飯湯",
       "address": "",
-      "map": "https://maps.app.goo.gl/aGySr2EpgKfcRMt58",
+      "map": "https://maps.google.com/?q=22.46845433722664,120.44651536562186",
       "url": "",
       "note": "07:00–14:30",
       "lat": 22.46845433722664,
@@ -990,7 +969,7 @@
       "tag": "餐飲",
       "name": "小琉球脆皮蛋餅早餐店",
       "address": "",
-      "map": "https://maps.app.goo.gl/LgpPEXigi7cB2poz6",
+      "map": "https://maps.google.com/?q=22.337481417942783,120.36912841534145",
       "url": "",
       "note": "三四休，06:00–10:00",
       "lat": 22.337481417942783,
@@ -1005,7 +984,7 @@
       "tag": "餐飲",
       "name": "洪媽媽早餐店小琉球",
       "address": "",
-      "map": "https://maps.app.goo.gl/c41jrKfASDttHTHA6",
+      "map": "https://maps.google.com/?q=22.335599424997092,120.37153447051043",
       "url": "",
       "note": "05:30–11:00",
       "lat": 22.335599424997092,
@@ -1020,7 +999,7 @@
       "tag": "餐飲",
       "name": "小琉球阿娟早餐店",
       "address": "",
-      "map": "https://maps.app.goo.gl/hJxjBoRKbLPp1d2P7",
+      "map": "https://maps.google.com/?q=22.35275625588372,120.38273068215706",
       "url": "",
       "note": "06:00–11:00",
       "lat": 22.35275625588372,
@@ -1035,7 +1014,7 @@
       "tag": "活動",
       "name": "小山看海藝文園區",
       "address": "",
-      "map": "https://maps.app.goo.gl/iAiSk3RueZx2L2Vq9",
+      "map": "https://maps.google.com/?q=22.35175697350716,120.36821523006039",
       "url": "",
       "note": "10:00–21:00",
       "lat": 22.35175697350716,

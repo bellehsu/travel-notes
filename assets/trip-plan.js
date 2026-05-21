@@ -40,6 +40,7 @@ const state = {
   mapMode: "single",
   mapDayKey: null,
   leafletMap: null,
+  schedulePage: 0,
   activeBudgetCategory: "__total__",
   selection: null,
   dragging: null,
@@ -430,14 +431,24 @@ function renderActivePanel() {
 }
 
 function renderSchedulePanel() {
+  const allDays = state.data.days || [];
+  const windowData = scheduleWindowDays(allDays);
+  const visibleDays = windowData.days;
+  const activeDay = visibleDays[0];
+  const toolbarLabel = windowData.pageSize === 1 && activeDay
+    ? (activeDay.title || activeDay.theme || dayLabel(activeDay, windowData.start))
+    : `${state.schedulePage + 1} / ${windowData.totalPages}`;
+  const toolbarHtml = windowData.totalPages > 1 ? `<div class="calendar-toolbar calendar-toolbar-compact"><div class="calendar-nav"><button type="button" data-schedule-prev ${state.schedulePage <= 0 ? "disabled" : ""} aria-label="上一天">‹</button><span>${esc(toolbarLabel)}</span><button type="button" data-schedule-next ${state.schedulePage >= windowData.totalPages - 1 ? "disabled" : ""} aria-label="下一天">›</button></div></div>` : "";
   $("#panel").innerHTML = `
     ${sharedRenderSchedulePanel({
-      days: state.data.days,
+      days: visibleDays,
       rows: scheduleRows(),
       startMinute: DAY_START,
       totalMinutes: SCHEDULE_TOTAL_MINUTES,
       cardClass: "trip-plan-calendar",
+      toolbarHtml,
       cornerHtml: '<button class="calendar-add-day" type="button" data-add-day aria-label="新增 Day"><img src="/assets/icon/plus.svg" alt=""></button>',
+      dayOffset: windowData.start,
       dayHeadTag: "button",
       dayHeadClass: "trip-plan-calendar-day-head",
       dayHeadAttrs: (_day, index) => `data-edit-calendar-day="${index}"`,
@@ -455,7 +466,25 @@ function renderSchedulePanel() {
   bindSchedulePanel();
 }
 
+function scheduleWindowDays(days) {
+  const pageSize = window.matchMedia("(max-width: 700px)").matches ? 1 : days.length || 1;
+  const totalPages = Math.max(1, Math.ceil(days.length / pageSize));
+  state.schedulePage = Math.max(0, Math.min(state.schedulePage || 0, totalPages - 1));
+  const start = state.schedulePage * pageSize;
+  return { pageSize, totalPages, start, days: days.slice(start, start + pageSize) };
+}
+
 function bindSchedulePanel() {
+  const allDays = state.data.days || [];
+  const totalPages = Math.max(1, Math.ceil(allDays.length / (window.matchMedia("(max-width: 700px)").matches ? 1 : allDays.length || 1)));
+  $("[data-schedule-prev]")?.addEventListener("click", () => {
+    state.schedulePage = Math.max(0, (state.schedulePage || 0) - 1);
+    renderSchedulePanel();
+  });
+  $("[data-schedule-next]")?.addEventListener("click", () => {
+    state.schedulePage = Math.min(totalPages - 1, (state.schedulePage || 0) + 1);
+    renderSchedulePanel();
+  });
   const addDayButton = $("[data-add-day]");
   if (addDayButton) addDayButton.addEventListener("click", addDay);
   $$("[data-edit-calendar-day]").forEach((button) => {

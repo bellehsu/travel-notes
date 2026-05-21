@@ -650,7 +650,7 @@ function schedulePosition(minute) {
 }
 
 function scheduleWindowDays(days) {
-  const pageSize = 5;
+  const pageSize = window.matchMedia("(max-width: 700px)").matches ? 1 : 5;
   const totalPages = Math.max(1, Math.ceil(days.length / pageSize));
   state.schedulePage = Math.max(0, Math.min(state.schedulePage || 0, totalPages - 1));
   const start = state.schedulePage * pageSize;
@@ -732,7 +732,11 @@ function renderSchedulePanel() {
   const rows = scheduleRows();
   const windowData = scheduleWindowDays(allDays);
   const visibleDays = windowData.days;
-  const toolbarHtml = windowData.totalPages > 1 ? `<div class="calendar-toolbar calendar-toolbar-compact"><div class="calendar-nav"><button type="button" data-schedule-prev ${state.schedulePage <= 0 ? "disabled" : ""}>‹</button><span>${state.schedulePage + 1} / ${windowData.totalPages}</span><button type="button" data-schedule-next ${state.schedulePage >= windowData.totalPages - 1 ? "disabled" : ""}>›</button></div></div>` : "";
+  const activeDay = visibleDays[0];
+  const toolbarLabel = windowData.pageSize === 1 && activeDay
+    ? (activeDay.title || activeDay.theme || dayLabel(activeDay, windowData.start))
+    : `${state.schedulePage + 1} / ${windowData.totalPages}`;
+  const toolbarHtml = windowData.totalPages > 1 ? `<div class="calendar-toolbar calendar-toolbar-compact"><div class="calendar-nav"><button type="button" data-schedule-prev ${state.schedulePage <= 0 ? "disabled" : ""} aria-label="上一天">‹</button><span>${esc(toolbarLabel)}</span><button type="button" data-schedule-next ${state.schedulePage >= windowData.totalPages - 1 ? "disabled" : ""} aria-label="下一天">›</button></div></div>` : "";
 
   $("#panel").innerHTML = `
     ${sharedRenderSchedulePanel({

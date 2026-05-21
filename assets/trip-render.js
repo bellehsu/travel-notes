@@ -165,7 +165,8 @@ function renderScheduleEvent(ev, options) {
   } = options;
   const top = Number(ev?.top) || 0;
   const height = Number(ev?.height) || 0;
-  const compactClass = height < (45 / totalMinutes) * 100 ? " calendar-event-compact" : "";
+  const compactThreshold = typeof window !== "undefined" && window.matchMedia("(max-width: 700px)").matches ? 75 : 45;
+  const compactClass = height < (compactThreshold / totalMinutes) * 100 ? " calendar-event-compact" : "";
   const styleParts = [`top:${top}%`, `height:${height}%`];
   if (ev.left !== undefined) styleParts.push(`left:calc(${ev.left}% + ${Number(ev.laneGap || 0)}px)`);
   if (ev.width !== undefined) styleParts.push(`width:calc(${ev.width}% - ${Number(ev.laneGap || 0) * 2}px)`);

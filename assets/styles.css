@@ -734,3 +734,18 @@ body{background:linear-gradient(180deg,#eef3f7,#d9e1e8);color:var(--text)}
   .map-sheet-toggle span{display:block;width:44px;height:5px;border-radius:999px;background:#9fb0c8}
   .map-side.is-collapsed .sub-tabs,.map-side.is-collapsed #mapList{display:none}
 }
+
+@media (max-width:700px){
+  .calendar-toolbar-compact{padding:8px 12px}
+  .calendar-nav{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:8px;width:100%}
+  .calendar-nav button{width:40px;height:36px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);font-size:24px;font-weight:900}
+  .calendar-nav button:disabled{opacity:.35}
+  .calendar-nav span{min-width:0;text-align:center;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .calendar-scroll{overflow-x:hidden!important}
+  .calendar-grid{--time-col:54px!important;--day-count:1!important;grid-template-columns:var(--time-col) minmax(0,1fr)!important;min-width:0!important;width:100%!important}
+  .calendar-day-head{min-width:0}
+  .calendar-day-col{min-width:0}
+  .calendar-event-compact{justify-content:center!important;gap:0!important}
+  .calendar-event-compact .calendar-event-name{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:1!important}
+  .calendar-event-compact .calendar-event-time{display:none!important}
+}
