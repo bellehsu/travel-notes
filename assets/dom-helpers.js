@@ -71,10 +71,10 @@ export function mapEmbedUrl(item, fallbackQuery = "台灣") {
 }
 
 export function mapOpenUrl(item, fallbackQuery = "") {
+  if (nonEmpty(item?.map)) return item.map;
   const lat = Number(item?.lat);
   const lng = Number(item?.lng);
   if (Number.isFinite(lat) && Number.isFinite(lng)) return `https://maps.google.com/?q=${lat},${lng}`;
-  if (nonEmpty(item?.map) && !isGoogleShortUrl(item?.map)) return item.map;
   const query = item?.address?.full || item?.address || item?.name || fallbackQuery;
   return nonEmpty(query) ? `https://maps.google.com/?q=${encodeURIComponent(query)}` : "";
 }

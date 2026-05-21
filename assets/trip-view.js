@@ -548,6 +548,15 @@ function renderMapList(locations, days) {
 }
 
 function bindMapListEvents(locations) {
+  const mapSide = $(".map-side");
+  const sheetToggle = $("[data-map-sheet-toggle]");
+  if (mapSide && sheetToggle) {
+    sheetToggle.addEventListener("click", () => {
+      const collapsed = mapSide.classList.toggle("is-collapsed");
+      sheetToggle.setAttribute("aria-expanded", String(!collapsed));
+      sheetToggle.setAttribute("aria-label", collapsed ? "展開地圖資訊" : "收合地圖資訊");
+    });
+  }
   $$('[data-day-key]').forEach((el) => el.addEventListener('click', () => {
     state.activeMapDayKey = el.dataset.dayKey;
     state.activeDay = Number.isNaN(Number(el.dataset.dayKey)) ? el.dataset.dayKey : Number(el.dataset.dayKey);

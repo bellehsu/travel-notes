@@ -26,6 +26,8 @@ const TILE_PROVIDER = {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
   },
 };
+const ZENG_XIAN_PLACE_URL = "https://www.google.com/maps/place/%E6%9D%B1%E6%B8%AF%E7%94%9F%E9%AD%9A%E7%89%87+%E6%9B%BE%E9%AE%AE%E9%BB%91%E9%AE%AA%E9%AD%9A%E5%B0%88%E8%B3%A3%E5%BA%97/@22.4681077,120.4251831,15z/data=!3m2!4b1!5s0x3471e18ede10c78d:0x1c333b4a7d7aa251!4m6!3m5!1s0x3471e18588b1fab1:0xc9038a0c4869b073!8m2!3d22.4681087!4d120.4436369!16s%2Fg%2F11b781b38h?entry=ttu&g_ep=EgoyMDI2MDUxMy4wIKXMDSoASAFQAw%3D%3D";
+const HUAQIAO_MARKET_URL = "https://maps.google.com/?q=22.46815839976465,120.44333072870971";
 
 const state = {
   data: null,
@@ -90,7 +92,7 @@ function priceText(price) {
 }
 
 function createStop(values) {
-  return Object.assign({
+  return normalizeKnownMapLocation(Object.assign({
     id: uid("stop"),
     name: "",
     type: "活動",
@@ -101,7 +103,7 @@ function createStop(values) {
     note: "",
     price: { min: "" },
     highlight: false,
-  }, values || {});
+  }, values || {}));
 }
 
 function seedData() {
@@ -156,7 +158,7 @@ function normalizeImportedData(raw) {
 }
 
 function normalizeShopItem(item) {
-  return Object.assign({
+  return normalizeKnownMapLocation(Object.assign({
     id: uid("shop"),
     tag: "其他",
     name: "",
@@ -166,7 +168,24 @@ function normalizeShopItem(item) {
     note: "",
     lat: "",
     lng: "",
-  }, item || {});
+  }, item || {}));
+}
+
+function normalizeKnownMapLocation(item) {
+  const name = String(item?.name || "");
+  const address = String(item?.address || "");
+  const isZengXian = name === "曾鮮黑鮪魚專賣店";
+  const isHuaqiaoMarket = name.includes("華僑市場") || address.includes("華僑市場") || name.includes("王匠黑鮪魚");
+  if (isHuaqiaoMarket) {
+    item.map = HUAQIAO_MARKET_URL;
+    item.lat = 22.46815839976465;
+    item.lng = 120.44333072870971;
+  } else if (isZengXian) {
+    item.map = ZENG_XIAN_PLACE_URL;
+    item.lat = 22.4681087;
+    item.lng = 120.4436369;
+  }
+  return item;
 }
 
 function defaultBudgetItems() {
@@ -242,11 +261,47 @@ function exportPayload() {
     return exportedDay;
   });
   data.budget_items = normalizeBudgetItems(data.budget_items);
-  return data;
+  return normalizeExportPrices(data);
 }
 
 function exportJsonText() {
   return JSON.stringify(exportPayload(), null, 2);
+}
+
+function exportNumber(value) {
+  if (value === "" || value == null) return undefined;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
+
+function normalizeExportPrice(price) {
+  if (price === "" || price == null) return undefined;
+  if (typeof price === "number" || typeof price === "string") {
+    const min = exportNumber(price);
+    return min === undefined ? undefined : { min };
+  }
+  if (typeof price !== "object" || Array.isArray(price)) return undefined;
+  const out = {};
+  ["amount", "min", "max"].forEach((key) => {
+    const number = exportNumber(price[key]);
+    if (number !== undefined) out[key] = number;
+  });
+  return Object.keys(out).length ? out : undefined;
+}
+
+function normalizeExportPrices(value) {
+  if (Array.isArray(value)) return value.map(normalizeExportPrices);
+  if (!value || typeof value !== "object") return value;
+  Object.keys(value).forEach((key) => {
+    if (key === "price") {
+      const price = normalizeExportPrice(value[key]);
+      if (price) value[key] = price;
+      else delete value[key];
+      return;
+    }
+    value[key] = normalizeExportPrices(value[key]);
+  });
+  return value;
 }
 
 function dayLabel(day, index) {
@@ -1080,6 +1135,15 @@ function renderDetailCard(loc) {
 }
 
 function bindMapPanel(locations) {
+  const mapSide = $(".map-side");
+  const sheetToggle = $("[data-map-sheet-toggle]");
+  if (mapSide && sheetToggle) {
+    sheetToggle.addEventListener("click", () => {
+      const collapsed = mapSide.classList.toggle("is-collapsed");
+      sheetToggle.setAttribute("aria-expanded", String(!collapsed));
+      sheetToggle.setAttribute("aria-label", collapsed ? "展開地圖資訊" : "收合地圖資訊");
+    });
+  }
   $$("[data-map-sub]").forEach((button) => {
     button.addEventListener("click", () => {
       state.activeMapSub = button.dataset.mapSub;

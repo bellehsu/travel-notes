@@ -436,6 +436,7 @@ export function renderMapPanelShell(options = {}) {
   return `
     <div class="map-layout ${esc(layoutClass)}">
       <aside class="map-side">
+        <button class="map-sheet-toggle" type="button" data-map-sheet-toggle aria-label="收合地圖資訊" aria-expanded="true"><span></span></button>
         <div class="sub-tabs" id="mapSubTabs">
           <button class="sub-tab ${activeSub === "days" ? "active" : ""}" type="button" ${subAttr}="days">每日行程</button>
           <button class="sub-tab ${activeSub === "saved" ? "active" : ""}" type="button" ${subAttr}="saved">收藏夾</button>
